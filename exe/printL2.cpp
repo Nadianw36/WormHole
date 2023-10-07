@@ -1,0 +1,50 @@
+#include "Escape/GraphIO.h"
+#include "Escape/EdgeHash.h"
+#include "Escape/Digraph.h"
+#include "Escape/Graph.h"
+#include "Escape/L0Graph.h"
+
+#include <vector>
+#include <algorithm>
+#include <numeric>
+#include <iostream>
+#include <chrono>
+#include <string>
+#include <cstring>
+#include <fstream>
+
+
+using namespace Escape;
+using namespace std::chrono;
+
+// exe/filname [BiBFS/L0] [graphname/graphname_seed_{n}] [start_from] [end_at]
+// note: graphname cannot contain any instances of _
+int main(int argc, char *argv[])
+{
+
+  std::string graph_name = argv[1];
+  std::string graph_L0_name = argv[1];
+
+  std::string delimiter = "_";
+  std::size_t d_pos = graph_L0_name.find(delimiter);
+  if(d_pos != std::string::npos) graph_name = graph_L0_name.substr(0, d_pos);
+
+  std::string graph_folder = "graphs/";
+  std::string input_folder = "inputs/";
+  std::string results_folder = "results/";
+  std::string bin_folder = "bin/";
+
+  std::string graph_filename = graph_name + ".edges";
+  std::string graph_loc = graph_folder + graph_filename;
+
+  std::ofstream graph_file(results_folder + graph_L0_name +  ".txt");
+
+  CGraph cg;
+  cg.loadGraphFromFile(graph_name);
+  printf("loading L0 and L1\n");
+  L0Graph L0;
+  L0 = L0Graph(cg, graph_L0_name);
+  L0.print_size(graph_file, graph_L0_name);
+  return 0;
+  
+}

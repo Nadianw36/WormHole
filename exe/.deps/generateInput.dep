@@ -1,0 +1,4 @@
+generateInput.o .deps/generateInput.dep: generateInput.cpp ../Escape/GraphIO.h \
+ ../Escape/ErrorCode.h ../Escape/Graph.h ../Escape/EdgeHash.h \
+ ../Escape/Digraph.h ../Escape/Graph.h ../Escape/L0Graph.h \
+ ../Escape/PrunedLandmark.h ../Escape/IndexedBinaryHeap.h
