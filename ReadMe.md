@@ -1,9 +1,3 @@
----
-title: "ReadMe"
-bibliography: ref.bib
-link-citations: true
----
-
 The following is the code to run Wormhole, a fast algorithm to compute estimated distances between vertex pairs in graphs that exhibit a core-periphery structure. This is an accompaniment to the manuscript _A Sublinear Algorithm for Approximate Shortest Paths in Large Networks_ by Sabyasachi Basu, Nadia Kōshima, Talya Eden, Omri Ben-Eliezer, C. Seshadhri (currently in submission).
 
 # Setup
@@ -58,7 +52,7 @@ The output of the first line is a set of files of the form `bin/GRAPHNAME_side_S
 
 # Datasets
 
-All our datasets are publicly available networks taken from repositories on the internet. We list the datasets used, and point the reader to the appropriate website for downloading these files. The files are from one of two sources: the SNAP large networks database [@snap], and the KONECT project [@konect]. The following table has the links to the appropriate pages.
+All our datasets are publicly available networks taken from repositories on the internet. We list the datasets used, and point the reader to the appropriate website for downloading these files. The files are from one of two sources: the SNAP large networks database [[1]](#1), and the KONECT project [[2]](#2). The following table has the links to the appropriate pages.
 
 <div align="center">
 
@@ -80,3 +74,12 @@ All our datasets are publicly available networks taken from repositories on the 
 </div>
 
 # References
+
+<a id="1">[1]</a>
+Jure Leskovec and Andrej Krevl. 2014. SNAP Datasets: Stanford Large
+Network Dataset Collection. http://snap.stanford.edu/data.
+
+<a id="2">[2]</a>
+Jérôme Kunegis. 2013. KONECT: The Koblenz Network Collection. In
+_Proceedings of the 22nd International Conference on World Wide Web (WWW ’13 Companion)_. Association for Computing
+Machinery, 1343–1350.
