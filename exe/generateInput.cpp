@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
   CGraph cg;
   cg.loadGraphFromFile(graph_name);
 
-  int ROUNDS = 100;
+  int ROUNDS = 10000;
   int count = 0;
   VertexIdx nVertices = cg.nVertices;
   // VertexIdx nVertices = 41652230;
