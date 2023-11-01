@@ -56,20 +56,20 @@ All our datasets are publicly available networks taken from repositories on the 
 
 <div align="center">
 
-| _Network_       | _Source_ |
-| --------------- | -------- |
-| caida           | KONECT   |
-| epinions        | SNAP     |
-| slashdot        | SNAP     |
-| dblp            | SNAP     |
-| higgs-twitter   | SNAP     |
-| skitter         | SNAP     |
-| large-dblp      | KONECT   |
-| soc-pokec       | SNAP     |
-| soc-livejournal | SNAP     |
-| soc-orkut       | SNAP     |
-| wikipedia       | KONECT   |
-| soc-twitter     | SNAP     |
+| _Network_       | _Source_                                                     |
+| --------------- | ------------------------------------------------------------ |
+| caida           | [KONECT](http://konect.cc/networks/as-caida20071105/)        |
+| epinions        | [SNAP](https://snap.stanford.edu/data/soc-Epinions1.html)    |
+| slashdot        | [SNAP](https://snap.stanford.edu/data/soc-Slashdot0811.html) |
+| dblp            | [SNAP](https://snap.stanford.edu/data/com-DBLP.html)         |
+| higgs-twitter   | [SNAP](https://snap.stanford.edu/data/higgs-twitter.html)    |
+| skitter         | [SNAP](https://snap.stanford.edu/data/as-Skitter.html)       |
+| large-dblp      | [KONECT](http://konect.cc/networks/dblp_coauthor/)           |
+| soc-pokec       | [SNAP](https://snap.stanford.edu/data/soc-Pokec.html)        |
+| soc-livejournal | [SNAP](https://snap.stanford.edu/data/soc-LiveJournal1.html) |
+| soc-orkut       | [SNAP](https://snap.stanford.edu/data/com-Orkut.html)        |
+| wikipedia       | [KONECT](http://konect.cc/networks/wikipedia_link_en/)       |
+| soc-twitter     | [SNAP](https://snap.stanford.edu/data/twitter-2010.html)     |
 
 </div>
 
