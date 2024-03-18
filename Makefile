@@ -1,6 +1,6 @@
 ESCAPE_HOME := .
 
-OBJECTS := Graph.o GraphIO.o
+OBJECTS := Graph.o GraphIO.o Config.o BiBFSGraph.o
 
 TARGETS := libescape.a
 

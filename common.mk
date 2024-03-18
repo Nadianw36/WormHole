@@ -1,7 +1,7 @@
-CC       := g++
+CC       := gcc
 INCLUDES := -I $(ESCAPE_HOME)
 DEFINES  := 
-CFLAGS   := -Wall -std=c++11 -g -O0 #-O3 -Werror
+CFLAGS   := -Wall -std=c++17 -g -O0 #-O3 -Werror
 LDFLAGS  := -L $(ESCAPE_HOME)
 LDLIBS   := -lescape -lstdc++
 

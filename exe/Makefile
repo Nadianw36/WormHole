@@ -1,6 +1,6 @@
 ESCAPE_HOME := ../
 
-TARGETS := sample generateL0seed generateInput createCGraph sanitize sampleL0 printL2 createL0CGraph PLL
+TARGETS := sample runQbS generateInput generateL0seed createCGraph
 
 OBJECTS := $(TARGETS:%=%.o)
 

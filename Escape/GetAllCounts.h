@@ -19,8 +19,6 @@
 #include "Escape/WedgeCollisions.h"
 #include "Escape/TriangleProgram.h"
 
-
-
 using namespace Escape;
 
 // This function generates all non-induced counts for 3-vertex patterns.
@@ -41,20 +39,19 @@ void getAllThree(CGraph *cg, CDAG *dag, double (&nonInd)[4])
 
     for (VertexIdx i = 0; i < n; i++)
     {
-        VertexIdx deg = cg->offsets[i+1] - cg->offsets[i]; // degree of i
-        m = m+deg;
-        w = w+(deg*(deg-1))/2; // updating total wedge count
+        VertexIdx deg = cg->offsets[i + 1] - cg->offsets[i]; // degree of i
+        m = m + deg;
+        w = w + (deg * (deg - 1)) / 2; // updating total wedge count
     }
-    m = m/2;
+    m = m / 2;
 
-    nonInd[0] = (n*(n-1)*(n-2))/6;  // number of independent sets
-    nonInd[1] = m*(n-2);    // number of plain edges
-    nonInd[2] = w; // number of plain wedges
+    nonInd[0] = (n * (n - 1) * (n - 2)) / 6; // number of independent sets
+    nonInd[1] = m * (n - 2);                 // number of plain edges
+    nonInd[2] = w;                           // number of plain wedges
 
     info = betterWedgeEnumerator(&(dag->outlist));
     nonInd[3] = info.total;
 }
-
 
 // This function generates all non-induced counts for up to 4-vertex patterns.
 // It is a wrapper function that calls the main algorithmic parts, and finally
@@ -69,7 +66,7 @@ void getAllFour(CGraph *cg, CDAG *dag, double (&nonInd)[11])
     TriangleInfo tri_info;
 
     n = cg->nVertices;
-    
+
     m = 0;
     w = 0;
     tri_info = betterWedgeEnumerator(&(dag->outlist));
@@ -77,35 +74,35 @@ void getAllFour(CGraph *cg, CDAG *dag, double (&nonInd)[11])
 
     for (VertexIdx i = 0; i < n; i++)
     {
-        VertexIdx deg = cg->offsets[i+1] - cg->offsets[i]; // degree of i
-        m = m+deg;
-        w = w+(deg*(deg-1))/2; // updating total wedge count
+        VertexIdx deg = cg->offsets[i + 1] - cg->offsets[i]; // degree of i
+        m = m + deg;
+        w = w + (deg * (deg - 1)) / 2; // updating total wedge count
     }
-    m = m/2;
+    m = m / 2;
 
-    nonInd[0] = (n*(n-1)*(n-2)*(n-3))/24;  // number of independent sets
-    nonInd[1] = m*((n-2)*(n-3)/2);    // number of only edges
-    nonInd[2] = (m*(m-1)/2) - w; // number of matchings
-    nonInd[3] = w*(n-3);        // number of only wedges
-    nonInd[4] = t*(n-3);        // number of only triangles
+    nonInd[0] = (n * (n - 1) * (n - 2) * (n - 3)) / 24; // number of independent sets
+    nonInd[1] = m * ((n - 2) * (n - 3) / 2);            // number of only edges
+    nonInd[2] = (m * (m - 1) / 2) - w;                  // number of matchings
+    nonInd[3] = w * (n - 3);                            // number of only wedges
+    nonInd[4] = t * (n - 3);                            // number of only triangles
 
-    printf("Getting easy four vertex patterns\n");
+    // printf("Getting easy four vertex patterns\n");
     SomeFourPatterns four_info = easyFourCounter(cg, &(dag->outlist));
-  
-    printf("Getting four cycles\n");
-    EdgeIdx fourcycles = fourCycleCounter(&(dag->outlist),&(dag->inlist));
 
-    printf("Getting four cliques\n");
+    // printf("Getting four cycles\n");
+    EdgeIdx fourcycles = fourCycleCounter(&(dag->outlist), &(dag->inlist));
+
+    // printf("Getting four cliques\n");
     EdgeIdx fourcliques = fourCliqueCounter(&(dag->outlist));
 
     nonInd[5] = four_info.threestars;
     nonInd[6] = four_info.threepaths;
     nonInd[7] = four_info.tailedtris;
-    nonInd[8] = fourcycles; 
+    nonInd[8] = fourcycles;
     nonInd[9] = four_info.chordalcycles;
     nonInd[10] = fourcliques;
 }
-    
+
 // This function generates all non-induced counts for 5-vertex patterns.
 // It is a wrapper function that calls the main algorithmic parts, and finally
 // calls conversion functions to get induced counts.
@@ -131,66 +128,64 @@ void getAllFive(CGraph *cg, CDAG *dag, double (&nonIndFour)[11], double (&nonInd
     four_info.tailedtris = nonIndFourStruct.tailedtris;
     four_info.chordalcycles = nonIndFourStruct.chordalcycles;
 
-    printf("Getting all triangles\n");
+    // printf("Getting all triangles\n");
     TriangleInfo tri_info = betterWedgeEnumerator(&(dag->outlist));
-    TriangleList allTris = storeAllTriangles(cg,tri_info.total);
+    TriangleList allTris = storeAllTriangles(cg, tri_info.total);
 
-    printf("Also getting reverse triangle info\n");
+    // printf("Also getting reverse triangle info\n");
     TriangleInfo in_tri_info = moveOutToIn(&(dag->outlist), &(dag->inlist), &tri_info);
 
     n = cg->nVertices;
-    
+
     m = 0;
     w = 0;
 
     for (VertexIdx i = 0; i < n; i++)
     {
-        VertexIdx deg = cg->offsets[i+1] - cg->offsets[i]; // degree of i
-        m = m+deg;
-        w = w+(deg*(deg-1))/2; // updating total wedge count
+        VertexIdx deg = cg->offsets[i + 1] - cg->offsets[i]; // degree of i
+        m = m + deg;
+        w = w + (deg * (deg - 1)) / 2; // updating total wedge count
     }
-    m = m/2;
+    m = m / 2;
 
     t = tri_info.total;
 
-    nonIndFive[0] = (n*(n-1)*(n-2)*(n-3)*(n-4))/120;
-    nonIndFive[1] = m*((n-2)*(n-3)*(n-4))/6;
-    nonIndFive[2] = ((m*(m-1))/2 - w)*(n-4);
-    nonIndFive[3] = w*((n-3)*(n-4))/2;
-    nonIndFive[4] = t*((n-3)*(n-4))/2;
+    nonIndFive[0] = (n * (n - 1) * (n - 2) * (n - 3) * (n - 4)) / 120;
+    nonIndFive[1] = m * ((n - 2) * (n - 3) * (n - 4)) / 6;
+    nonIndFive[2] = ((m * (m - 1)) / 2 - w) * (n - 4);
+    nonIndFive[3] = w * ((n - 3) * (n - 4)) / 2;
+    nonIndFive[4] = t * ((n - 3) * (n - 4)) / 2;
 
-    for(int i=5; i<11; i++)
-        nonIndFive[i] = nonIndFour[i]*(n-4);
-    
-    nonIndFive[11] = w*(m-2) - 3*t - 3*nonIndFourStruct.threestars - 2*nonIndFourStruct.threepaths;
-    nonIndFive[12] = t*(m-3) - nonIndFourStruct.tailedtris; 
+    for (int i = 5; i < 11; i++)
+        nonIndFive[i] = nonIndFour[i] * (n - 4);
 
+    nonIndFive[11] = w * (m - 2) - 3 * t - 3 * nonIndFourStruct.threestars - 2 * nonIndFourStruct.threepaths;
+    nonIndFive[12] = t * (m - 3) - nonIndFourStruct.tailedtris;
 
-    printf("Counting trees\n");
+    // printf("Counting trees\n");
     FiveTrees tree_counts = fiveTreeCounter(cg, nonIndFourStruct, tri_info.total);
 
-    printf("Counting triangle based patterns\n");
-    FiveFromTriangles tri_based_counts = fiveFromTriCounter(cg,&(dag->outlist),&tri_info,four_info);
+    // printf("Counting triangle based patterns\n");
+    FiveFromTriangles tri_based_counts = fiveFromTriCounter(cg, &(dag->outlist), &tri_info, four_info);
 
     Count hourglass = count5_Hourglass<false>(&(dag->outlist), &tri_info, 0);
     Count stingray = count5_Stingray<false>(&(dag->outlist), &(dag->inlist), &tri_info, 0);
     Count three_tri_col = count5_StellateTrident<false>(&(dag->outlist), &tri_info, 0);
     Count tri_strip = count5_TriangleStrip<true>(&(dag->outlist), nonIndFourStruct.fourcliques, &tri_info);
     Count cobra = count5_Cobra<true>(&(dag->outlist), &(dag->inlist), nonIndFourStruct.fourcliques);
- 
-    printf("Counting 4-cycle and 4-clique based patterns\n");
-    CycleBased cycle_related = fourCycleBasedCounter(&(dag->outlist), &(dag->inlist), &tri_info, &in_tri_info,nonIndFourStruct.chordalcycles);
+
+    // printf("Counting 4-cycle and 4-clique based patterns\n");
+    CycleBased cycle_related = fourCycleBasedCounter(&(dag->outlist), &(dag->inlist), &tri_info, &in_tri_info, nonIndFourStruct.chordalcycles);
     CliqueBased clique_related = fourCliqueBasedCounter(cg, &(dag->outlist), &tri_info);
 
-    printf("Counting five cycles\n");
-    EdgeIdx five_cycle = fiveCycleCounter(&(dag->outlist),&(dag->inlist));
+    // printf("Counting five cycles\n");
+    EdgeIdx five_cycle = fiveCycleCounter(&(dag->outlist), &(dag->inlist));
 
-    printf("Counting collision patterns\n");
-    CollisionPatterns collision_vals = fromTriangleList(cg,&allTris);
+    // printf("Counting collision patterns\n");
+    CollisionPatterns collision_vals = fromTriangleList(cg, &allTris);
 
-    printf("Counting almost cliques\n");
-    EdgeIdx almost_clique = almostFiveClique(cg);  
-
+    // printf("Counting almost cliques\n");
+    EdgeIdx almost_clique = almostFiveClique(cg);
 
     nonIndFive[13] = tree_counts.fourstars;
     nonIndFive[14] = tree_counts.prongs;
@@ -201,21 +196,17 @@ void getAllFive(CGraph *cg, CDAG *dag, double (&nonIndFour)[11], double (&nonInd
     nonIndFive[19] = cycle_related.tailedfourcycles;
     nonIndFive[20] = five_cycle;
     nonIndFive[21] = hourglass;
-    nonIndFive[22] =  cobra;
-    nonIndFive[23] =  stingray;
+    nonIndFive[22] = cobra;
+    nonIndFive[23] = stingray;
     nonIndFive[24] = cycle_related.hattedfourcycles;
     nonIndFive[25] = collision_vals.threeWedgeCol;
     nonIndFive[26] = three_tri_col;
     nonIndFive[27] = clique_related.tailedfourcliques;
-    nonIndFive[28] =  tri_strip;
+    nonIndFive[28] = tri_strip;
     nonIndFive[29] = collision_vals.chordalWedgeCol;
     nonIndFive[30] = collision_vals.wheel;
     nonIndFive[31] = clique_related.hattedfourcliques;
     nonIndFive[32] = almost_clique;
     nonIndFive[33] = clique_related.fivecliques;
-
 }
- #endif
-
-
-
+#endif

@@ -1,23 +1,21 @@
 #include "Escape/GraphIO.h"
 
-
 using namespace Escape;
 
-static bool isBlankLine( const char* line )
+static bool isBlankLine(const char *line)
 {
-  while( *line )
+  while (*line)
   {
-    if( !isspace( *line ) )
+    if (!isspace(*line))
       return false;
     ++line;
   }
   return true;
 }
 
-
-static ErrorCode loadGraph_Escape(const char *path, Graph& graph, int undirected)
+static ErrorCode loadGraph_Escape(const char *path, Graph &graph, int undirected)
 {
-  FILE* f = fopen(path, "r");
+  FILE *f = fopen(path, "r");
   if (!f)
   {
     fprintf(stderr, "could not open file %s\n", path);
@@ -29,22 +27,22 @@ static ErrorCode loadGraph_Escape(const char *path, Graph& graph, int undirected
   char line[1024];
   while (fgets(line, sizeof(line), f))
   {
-    //Ignore comment lines.
+    // Ignore comment lines.
     if (line[0] == '#')
       continue;
 
     if (isBlankLine(line))
       continue;
-      
+
     int64_t i1, i2;
     sscanf(line, "%ld%ld", &i1, &i2);
     if (graph.nVertices == 0)
     {
       graph.nVertices = i1;
       if (undirected)
-          graph.nEdges = 2*i2;
+        graph.nEdges = 2 * i2;
       else
-          graph.nEdges = i2;
+        graph.nEdges = i2;
       graph.srcs = new VertexIdx[graph.nEdges];
       graph.dsts = new VertexIdx[graph.nEdges];
     }
@@ -55,9 +53,9 @@ static ErrorCode loadGraph_Escape(const char *path, Graph& graph, int undirected
       ++iEdge;
       if (undirected)
       {
-          graph.srcs[iEdge] = i2;
-          graph.dsts[iEdge] = i1;
-          ++iEdge;
+        graph.srcs[iEdge] = i2;
+        graph.dsts[iEdge] = i1;
+        ++iEdge;
       }
     }
   }
@@ -68,20 +66,18 @@ static ErrorCode loadGraph_Escape(const char *path, Graph& graph, int undirected
     fprintf(stderr, "expected %ld edges, only got %ld\n", graph.nEdges, iEdge);
     return ecIOError;
   }
-  
+
   return ecNone;
 }
 
-
-
-ErrorCode Escape::loadGraph(const char *path, Graph& graph, int undirected, IOFormat fmt)
+ErrorCode Escape::loadGraph(const char *path, Graph &graph, int undirected, IOFormat fmt)
 {
   switch (fmt)
   {
-    case IOFormat::escape:
-      return loadGraph_Escape(path, graph, undirected);
-    
-    default:
-      return ecUnsupportedFormat;
+  case IOFormat::escape:
+    return loadGraph_Escape(path, graph, undirected);
+
+  default:
+    return ecUnsupportedFormat;
   }
 }
