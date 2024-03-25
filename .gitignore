@@ -1,0 +1,16 @@
+# extensionless files
+*
+!/**/
+!*.*
+
+# dependency folders
+.deps
+exe/.deps
+
+# input folders
+results
+bin
+input
+
+libescape.a
+*.o

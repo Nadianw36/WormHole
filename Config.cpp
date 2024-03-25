@@ -3,8 +3,8 @@
 // global folders
 string Escape::BIN_FOLDER = "bin/";
 string Escape::RESULTS_FOLDER = "results/";
-string Escape::INPUT_FOLDER = "input/";
-string Escape::GRAPH_FOLDER = "graph/";
+string Escape::INPUT_FOLDER = "inputs/";
+string Escape::GRAPH_FOLDER = "graphs/";
 string Escape::BIBFS_FOLDER = "BiBFS/";
 string Escape::QBS_FOLDER = "QbS/";
 string Escape::L0_FOLDER = "L0/";

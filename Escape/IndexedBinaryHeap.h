@@ -13,12 +13,18 @@ namespace Escape
     {
     public:
         // Maps keys to their positions in the binary heap
-        unordered_map<VertexIdx, int> keyToPosition;
+        VertexIdx *keyToPosition;
         // CGraph *cg;
 
-        IndexedBinaryHeap()
+        IndexedBinaryHeap(VertexIdx nVertices)
         {
-            heap.push_back(0);
+            heap = new VertexIdx[nVertices + 1];
+            heapEnd = 1;
+
+            keyToPosition = new VertexIdx[nVertices];
+            positionToKey = new VertexIdx[nVertices + 1];
+            memset(keyToPosition, -1, nVertices * sizeof(VertexIdx));
+            memset(positionToKey, -1, (nVertices + 1) * sizeof(VertexIdx));
         }
 
         // IndexedBinaryHeap(CGraph *g)
@@ -32,29 +38,31 @@ namespace Escape
         VertexIdx popMax()
         {
             int position = 1;
+
             VertexIdx maxKey = positionToKey[position];
-            VertexIdx lastValue = heap.back(); // removing last element
-            int lastPosition = heap.size() - 1;
-            heap.pop_back();
-            if (!heap.empty())
+            VertexIdx lastValue = heap[--heapEnd]; // removing last element
+            int lastPosition = heapEnd;
+            // heap.pop_back(); // WHAT DOES THIS DO
+            if (heapEnd > 1)
             {
-                heap[position] = lastValue;  // replace last value as max
-                keyToPosition.erase(maxKey); // remove max
+                heap[position] = lastValue; // replace last value as max
+                keyToPosition[maxKey] = -1; // remove max
                 keyToPosition[positionToKey[lastPosition]] = position;
                 positionToKey[position] = positionToKey[lastPosition];
-                positionToKey.erase(lastPosition);
+                positionToKey[lastPosition] = -1;
                 heapifyDown(position);
             }
             return maxKey;
         }
 
         // Increment the value associated with a key by 1
-        void increment(int key)
+        void increment(VertexIdx key)
         {
-            if (keyToPosition.count(key) == 0)
+
+            if (keyToPosition[key] < 0)
             {
-                heap.push_back(1);
-                int position = heap.size() - 1;
+                heap[heapEnd++] = 1;
+                int position = heapEnd - 1;
                 keyToPosition[key] = position;
                 positionToKey[position] = key;
             }
@@ -68,9 +76,10 @@ namespace Escape
         }
 
     private:
-        vector<VertexIdx> heap;
+        VertexIdx *heap;
+        VertexIdx heapEnd;
         // Maps positions in the binary heap to their keys
-        unordered_map<int, VertexIdx> positionToKey;
+        VertexIdx *positionToKey;
         // choose vertex with highest L0 degree else choose higher overall degree
         bool greaterThan(int p1, int p2)
         {
@@ -94,10 +103,10 @@ namespace Escape
         // Helper function to heapify down a position in the binary heap
         void heapifyDown(int position)
         {
-            while (2 * position < heap.size())
+            while (2 * position < heapEnd)
             {
                 int child = 2 * position;
-                if (child + 1 < heap.size() && greaterThan(child + 1, child))
+                if (child + 1 < heapEnd && greaterThan(child + 1, child))
                 {
                     child++;
                 }

@@ -53,6 +53,7 @@ namespace Escape
     VertexIdx nVerticesL0;
     PrunedLandmarkLabeling<> pll;
     ofstream output;
+    chrono::high_resolution_clock::time_point outside_core_start_clock, outside_core_end_clock;
 
     // shared variables
     int acc_distance, L0_distance;
@@ -133,7 +134,10 @@ namespace Escape
           {
             VertexIdx nbor = nbors[e];
             if (!(L0[nbor] || L1[nbor]))
-              throw invalid_argument("all neibors of L0 should be in L0 or L1");
+            {
+              printf("%ld %ld \n", v, nbor);
+              throw invalid_argument("all neighbors of L0 should be in L0 or L1");
+            }
           }
         }
         else if (L1[v])
@@ -146,7 +150,15 @@ namespace Escape
               countL0++;
           }
           if (!(countL0 > 0))
-            throw invalid_argument("L1 vertices are all connected to L0");
+          {
+            for (EdgeIdx e = offsets[v]; e < offsets[v + 1]; e++)
+            {
+              VertexIdx nbor = nbors[e];
+              printf("nbor %ld \n", nbor);
+            }
+            printf(" %ld %ld %d %d\n", v, countL0, L1[v], L0[v]);
+            throw invalid_argument("L1 vertices are all connected to L0 %ld ");
+          }
         }
       }
     }
@@ -156,7 +168,7 @@ namespace Escape
      */
     void generateL0FromGreedy(bool optimal)
     {
-      IndexedBinaryHeap L1_map = IndexedBinaryHeap(); // maps nodes currently in L1 -> L0 degree
+      IndexedBinaryHeap L1_map = IndexedBinaryHeap(nVertices); // maps nodes currently in L1 -> L0 degree
 
       auto v = rand() % (VertexIdx)nVertices; // picks seed node
       if (optimal)
@@ -195,9 +207,10 @@ namespace Escape
           }
         }
       }
-      for (auto it = L1_map.keyToPosition.cbegin(); it != L1_map.keyToPosition.cend(); ++it)
+      for (VertexIdx i = 0; i < nVertices; i++)
       {
-        L1[it->first] = true;
+        if (L1_map.keyToPosition[i] > 0)
+          L1[i] = true;
       }
     }
 
@@ -491,57 +504,32 @@ namespace Escape
       p1_L2_pt = -1;
       p2_L2_pt = -1;
       int pathDistance = 0;
+
       // printf("vertices: %d, %d\n", p1, p2);
       // printf("L0: %d, %d\n", L0[p1], L0[p2]);
       // printf("L1: %d, %d\n", L1[p1], L1[p2]);
       if (p1 == p2)
         return 0;
 
+      outside_core_start_clock = chrono::high_resolution_clock::now();
+
       if (!L0[p1] && !L1[p1] && !L0[p2] && !L1[p2])
       { // BiBFS within L2 neighborhood(s)
-        // chrono::high_resolution_clock::time_point start_clock = chrono::high_resolution_clock::now();
         int L2_distance = L2_to_L2(p1, p2);
-        // chrono::high_resolution_clock::time_point end_clock = chrono::high_resolution_clock::now();
 
         if (L2_distance > 0 || (p1_L2_pt < 0 || p2_L2_pt < 0))
           return L2_distance; // found path or path not possible
 
         pathDistance = distance[p1_L2_pt] + (-1) * distance[p2_L2_pt] - 2;
-
-        // auto duration = chrono::duration_cast<chrono::microseconds>(end_clock - start_clock);
-        // int time = (double)duration.count();
-        // result.p1_time_to_L0 = time / 2;
-        // result.p2_time_to_L0 = time / 2;
       }
 
-      // chrono::high_resolution_clock::time_point p1_start_clock = chrono::high_resolution_clock::now();
       Ln_to_L0 p1_distance = distance_Ln_to_L0(p1, p1_L2_pt, queue1, 1);
       // printf("p1 dist %ld \n", p1_distance.distance);
-      // chrono::high_resolution_clock::time_point p1_end_clock = chrono::high_resolution_clock::now();
-      // chrono::high_resolution_clock::time_point p2_start_clock = chrono::high_resolution_clock::now();
+
       Ln_to_L0 p2_distance = distance_Ln_to_L0(p2, p2_L2_pt, queue2, -1);
       // printf("p2 dist %ld \n", p2_distance.distance);
-      // chrono::high_resolution_clock::time_point p2_end_clock = chrono::high_resolution_clock::now();
 
-      // auto p1_duration = chrono::duration_cast<chrono::microseconds>(p1_end_clock - p1_start_clock);
-      // auto p2_duration = chrono::duration_cast<chrono::microseconds>(p2_end_clock - p2_start_clock);
-
-      // if (!L0[p1] && !L1[p1])
-      // {
-      //   if (result.p1_time_to_L0 == -1)
-      //     result.p1_time_to_L0 = (double)p1_duration.count();
-      //   else
-      //     result.p1_time_to_L0 += (double)p1_duration.count();
-      //   result.p1_dist_to_L0 = p1_distance.distance;
-      // }
-      // if (!L0[p2] && !L1[p2])
-      // {
-      //   if (result.p2_time_to_L0 == -1)
-      //     result.p2_time_to_L0 = (double)p2_duration.count();
-      //   else
-      //     result.p2_time_to_L0 += (double)p2_duration.count();
-      //   result.p2_dist_to_L0 = p2_distance.distance;
-      // }
+      outside_core_end_clock = chrono::high_resolution_clock::now();
 
       if (p1_distance.distance < 0 || p2_distance.distance < 0)
         return -1;

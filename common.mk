@@ -5,7 +5,7 @@ CFLAGS   := -Wall -std=c++17 -g -O0 #-O3 -Werror
 LDFLAGS  := -L $(ESCAPE_HOME)
 LDLIBS   := -lescape -lstdc++
 
-
+CONFIGDIR := bin graphs inputs results
 DEPDIR   := .deps
 DEPENDS  := $(OBJECTS:%.o=$(DEPDIR)/%.dep)
 MAKEDEP  = g++ -MM $(INCLUDES) $(DEFINES) $(CFLAGS) 
@@ -20,6 +20,8 @@ dep : $(DEPENDS)
 $(DEPDIR):
 	mkdir -p $(DEPDIR)
 
+$(CONFIGDIR):
+	mkdir -p $(CONFIGDIR)
 
 $(DEPDIR)/%.dep : %.cpp | $(DEPDIR)
 	$(MAKEDEP) $< -o /dev/stdout | sed 's,:, $(DEPDIR)/$*.dep:,' > $@
