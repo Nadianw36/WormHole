@@ -516,6 +516,7 @@ namespace Escape
       if (!L0[p1] && !L1[p1] && !L0[p2] && !L1[p2])
       { // BiBFS within L2 neighborhood(s)
         int L2_distance = L2_to_L2(p1, p2);
+        // printf("L2->L2: %d, p1 L2 %ld, p2 L2 %ld\n", distance, p1_L2_pt, p2_L2_pt);
 
         if (L2_distance > 0 || (p1_L2_pt < 0 || p2_L2_pt < 0))
           return L2_distance; // found path or path not possible
@@ -524,10 +525,10 @@ namespace Escape
       }
 
       Ln_to_L0 p1_distance = distance_Ln_to_L0(p1, p1_L2_pt, queue1, 1);
-      // printf("p1 dist %ld \n", p1_distance.distance);
+      // printf("p1 dist %d \n", p1_distance.distance);
 
       Ln_to_L0 p2_distance = distance_Ln_to_L0(p2, p2_L2_pt, queue2, -1);
-      // printf("p2 dist %ld \n", p2_distance.distance);
+      // printf("p2 dist %d \n", p2_distance.distance);
 
       outside_core_end_clock = chrono::high_resolution_clock::now();
 
@@ -755,7 +756,7 @@ namespace Escape
 
       int pathDistance = bidirectionalBFS();
 
-      if (pathDistance < 0)
+      if (pathDistance > 0)
         return pathDistance;
       if (p1_L2_pt < 0 && !Q1empty())
       { // continue traversing p1's neighborhood if we haven't hit L2 yet
@@ -780,6 +781,7 @@ namespace Escape
       queue[Q_START_IDX] = Q_START;
       queue[Q_END_IDX] = Q_START;
       queueVertex(p, queue, distanceIncrement);
+      // printf("q start + end %ld %ld %ld\n", queue[Q_START_IDX], queue[Q_END_IDX], queue[queue[Q_START_IDX]]);
 
       VertexIdx L2_pt = shortest_path_to_L2(queue, distanceIncrement);
 
@@ -813,9 +815,7 @@ namespace Escape
           }
           if (!visited[nbor])
           {
-            visited[nbor] = true;
-            queue[queue[Q_END_IDX]++];
-            distance[nbor] = distance[v] + distanceIncrement;
+            queueVertex(nbor, queue, distanceIncrement);
           }
         }
       }
