@@ -74,6 +74,8 @@ namespace Escape
         const VertexIdx LEVEL_START = 1;
 
         int8_t *distance;
+        VertexIdx *parent; // first two slots are reserved for start index and end index
+        VertexIdx mergeVertex, secondParent;
         bool collision;
         const int INFI = 126;
 
@@ -85,6 +87,7 @@ namespace Escape
             // printf("%ld %ld \n", nVertices, nEdges);
             queue1 = new VertexIdx[nVertices + 2];
             queue2 = new VertexIdx[nVertices + 2];
+            parent = new VertexIdx[nVertices];
             distance = new int8_t[nVertices];
 
             memset(distance, INFI, nVertices);
@@ -102,14 +105,40 @@ namespace Escape
         void reset()
         {
             memset(distance, INFI, nVertices);
+            memset(parent, -1, nVertices * sizeof(VertexIdx));
             memset(visited, false, nVertices);
             collision = false;
+            mergeVertex = -1;
+            secondParent = -1;
         }
 
-        void queueVertex(VertexIdx v, VertexIdx *queue, int d)
+        vector<VertexIdx> recoverPath(VertexIdx s, VertexIdx t)
+        {
+            vector<VertexIdx> path;
+            path.push_back(mergeVertex);
+            VertexIdx p = parent[mergeVertex];
+            while (p >= 0)
+            {
+                path.push_back(p);
+                p = parent[p];
+            }
+            std::reverse(path.begin(), path.end());
+            p = secondParent;
+            while (p >= 0)
+            {
+                path.push_back(p);
+                p = parent[p];
+            }
+            if (path.back() != t)
+                std::reverse(path.begin(), path.end());
+            return path;
+        }
+
+        void queueVertex(VertexIdx v, VertexIdx p, VertexIdx *queue, int d)
         {
             visited[v] = true;
             distance[v] = d;
+            parent[v] = p;
             queue[queue[Q_END_IDX]++] = v;
         }
 

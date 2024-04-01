@@ -113,6 +113,7 @@ int main(int argc, char *argv[])
   std::vector<int> L0_hops;
 
   std::ofstream distancesFile;
+  std::ofstream pathsFile;
   std::ofstream distToReachCoreFile;
   std::ofstream hopsInCoreFile;
   std::ofstream runtimesFile;
@@ -123,6 +124,7 @@ int main(int argc, char *argv[])
   std::ofstream queriesAccumulatedWithoutSampleFile;
 
   distancesFile.open(results_path + "_distances.txt");
+  pathsFile.open(results_path + "_paths.txt");
   runtimesFile.open(results_path + "_runtimes.txt");
   failedSampleFile.open(results_path + "_failed.txt");
   queriesFile.open(results_path + "_queries.txt");
@@ -234,6 +236,17 @@ int main(int argc, char *argv[])
       L2_to_L0_dist.push_back(sample.p2_dist_to_L0);
       L0_hops.push_back(sample.p1_L0_hops);
       L0_hops.push_back(sample.p2_L0_hops);
+      vector<VertexIdx> path = L0.recoverPath(v1, v2);
+      for (const auto &p : path)
+        pathsFile << p << " ";
+      pathsFile << "\n";
+    }
+    else
+    {
+      vector<VertexIdx> path = bg.recoverPath(v1, v2);
+      for (const auto &p : path)
+        pathsFile << p << " ";
+      pathsFile << "\n";
     }
     distances.push_back((double)(distance));
     auto duration = duration_cast<std::chrono::microseconds>(end_clock - start_clock);
@@ -310,6 +323,7 @@ int main(int argc, char *argv[])
   // nodesTouchedWithoutSamplesFile.write((char*)nodesTouchedWithoutSample, sizeof(bool) * (int64_t) vcount);
 
   distancesFile.close();
+  pathsFile.close();
   runtimesFile.close();
   failedSampleFile.close();
   return 0;

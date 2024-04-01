@@ -567,16 +567,26 @@ namespace Escape
       if (L0[p])
       {
         if (visited[p])
+        {
+          mergeVertex = p;
+          secondParent = p;
           return {0, true};
-        queueVertex(p, queue, dist);
+        }
+
+        queueVertex(p, -1, queue, dist);
         return {0, false};
       }
       else if (L1[p])
       {
         if (visited[p])
+        {
+          mergeVertex = p;
+          secondParent = p;
           return {-1, true}; // can only happen during second point traversal and we need to undo steps to L0
+        }
 
         visited[p] = true;
+        parent[p] = -1;
 
         VertexIdx nbor;
         for (EdgeIdx j = offsets[p]; j < offsets[p + 1]; j++)
@@ -586,8 +596,12 @@ namespace Escape
           if (L0[nbor])
           {
             if (visited[nbor])
+            {
+              mergeVertex = nbor;
+              secondParent = p;
               return {1, true};
-            queueVertex(nbor, queue, dist);
+            }
+            queueVertex(nbor, p, queue, dist);
           }
         }
 
@@ -616,9 +630,12 @@ namespace Escape
             // printf("   neighbor in L1 %ld %d\n", nbor, visited[nbor]);
             if (visited[nbor])
             {
+              mergeVertex = nbor;
+              secondParent = p;
               return {pathDistance, true}; // see line 595
             }
             visited[nbor] = true;
+            parent[nbor] = L2_p;
             for (EdgeIdx i = offsets[nbor]; i < offsets[nbor + 1]; i++)
             {
               L0nbor = nbors[i];
@@ -626,8 +643,13 @@ namespace Escape
               {
                 // printf("      neighbor in L0 %ld %d\n", L0nbor, visited[L0nbor]);
                 if (visited[L0nbor] && distance[L0nbor] != dist)
+                {
+                  mergeVertex = L0nbor;
+                  secondParent = nbor;
                   return {pathDistance + 2, true};
-                queueVertex(L0nbor, queue, dist);
+                }
+
+                queueVertex(L0nbor, nbor, queue, dist);
               }
             }
           }
@@ -733,11 +755,11 @@ namespace Escape
 
       queue1[Q_START_IDX] = Q_START;
       queue1[Q_END_IDX] = Q_START;
-      queueVertex(p1, queue1, 1);
+      queueVertex(p1, -1, queue1, 1);
 
       queue2[Q_START_IDX] = Q_START;
       queue2[Q_END_IDX] = Q_START;
-      queueVertex(p2, queue2, -1);
+      queueVertex(p2, -1, queue2, -1);
 
       level1Record[LEVEL_START] = queue1[Q_END_IDX];
       level1Record[LEVEL_IDX] = LEVEL_START;
@@ -774,7 +796,7 @@ namespace Escape
     {
       queue[Q_START_IDX] = Q_START;
       queue[Q_END_IDX] = Q_START;
-      queueVertex(p, queue, distanceIncrement);
+      queueVertex(p, -1, queue, distanceIncrement);
       // printf("q start + end %ld %ld %ld\n", queue[Q_START_IDX], queue[Q_END_IDX], queue[queue[Q_START_IDX]]);
 
       return shortest_path_to_L2(queue, distanceIncrement);
@@ -804,7 +826,7 @@ namespace Escape
           }
           if (!visited[nbor])
           {
-            queueVertex(nbor, queue, distance[v] + distanceIncrement);
+            queueVertex(nbor, v, queue, distance[v] + distanceIncrement);
           }
         }
       }

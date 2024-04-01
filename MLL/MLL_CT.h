@@ -385,7 +385,7 @@ public:
 
     high_resolution_clock::time_point start_clock;
     high_resolution_clock::time_point end_clock;
-    duration<double, std::milli> runtime = 0;
+    double runtime = 0;
     duration<double, std::milli> tempRuntime = 0;
     if (!load_label_bp())
     {
@@ -393,8 +393,9 @@ public:
       construct_bp_label();
       end_clock = high_resolution_clock::now();
       save_label_bp();
-      runtime += end_clock - start_clock;
+
       tempRuntime = end_clock - start_clock;
+      runtime += (double)tempRuntime.count();
       resultsFile << "construct_bp_label microseconds " << (double)tempRuntime.count() << "\n";
     }
     // decompose_tree
@@ -406,8 +407,8 @@ public:
       end_clock = high_resolution_clock::now();
       save_label_tree();
       save_tmp_graph();
-      runtime += end_clock - start_clock;
       tempRuntime = end_clock - start_clock;
+      runtime += (double)tempRuntime.count();
       resultsFile << "decompose_tree microseconds " << (double)tempRuntime.count() << "\n";
     }
     else
@@ -428,8 +429,8 @@ public:
       // may remove the memory used by ctGraph
       ctGraph.clear(), ctGraph.shrink_to_fit();
       save_label_core();
-      runtime += end_clock - start_clock;
       tempRuntime = end_clock - start_clock;
+      runtime += (double)tempRuntime.count();
       resultsFile << "decompose_core microseconds " << (double)tempRuntime.count() << "\n";
     }
     else
@@ -447,8 +448,8 @@ public:
       end_clock = high_resolution_clock::now();
       save_label_tree();
       save_ptdL();
-      runtime += end_clock - start_clock;
       tempRuntime = end_clock - start_clock;
+      runtime += (double)tempRuntime.count();
       resultsFile << "compute_global_tree_label microseconds " << (double)tempRuntime.count() << "\n";
     }
     resultsFile << "total " << runtime.count() << "\n";

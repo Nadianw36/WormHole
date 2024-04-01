@@ -39,7 +39,7 @@ int BiBFSGraph::bidirectionalBFS()
                         if (!visited[nbor])
                         {
                             // printf("1: queueing %ld\n", nbor);
-                            queueVertex(nbor, queue1, distance[v] + 1);
+                            queueVertex(nbor, v, queue1, distance[v] + 1);
                             // printf("1: done queueing \n");
                         }
                         else if (distance[nbor] < 0) // v has been visited from side 2
@@ -48,7 +48,11 @@ int BiBFSGraph::bidirectionalBFS()
                             int temp_distance = (-1 * distance[nbor]) + distance[v] - 1;
                             // printf("%d %d %d %d\n", temp_distance, pathDistance, distance[nbor], distance[v]);
                             if (temp_distance < pathDistance)
+                            {
                                 pathDistance = temp_distance;
+                                mergeVertex = nbor;
+                                secondParent = v;
+                            }
                             collision = true;
                             // printf("1: done resolving merge \n");
                         }
@@ -75,7 +79,7 @@ int BiBFSGraph::bidirectionalBFS()
                         if (!visited[nbor])
                         {
                             // printf("2: queueing %ld\n", nbor);
-                            queueVertex(nbor, queue2, distance[v] - 1);
+                            queueVertex(nbor, v, queue2, distance[v] - 1);
                             // printf("2: done queueing \n");
                         }
                         else if (distance[nbor] > 0) // v has been visited from side 1
@@ -84,7 +88,11 @@ int BiBFSGraph::bidirectionalBFS()
                             int temp_distance = distance[nbor] + (-1 * distance[v]) - 1;
                             // printf("%d %d %d %d\n", temp_distance, pathDistance, distance[nbor], distance[v]);
                             if (temp_distance < pathDistance)
+                            {
                                 pathDistance = temp_distance;
+                                mergeVertex = nbor;
+                                secondParent = v;
+                            }
                             collision = true;
                             // printf("2: done resolving merge \n");
                         }
@@ -110,13 +118,13 @@ int BiBFSGraph::BidirectionalBFS(VertexIdx p1, VertexIdx p2)
     // printf("setting q1 \n");
     queue1[Q_START_IDX] = Q_START;
     queue1[Q_END_IDX] = Q_START;
-    queueVertex(p1, queue1, 1);
+    queueVertex(p1, -1, queue1, 1);
     // printf("finished setting q1 %ld %ld %ld\n", queue1[Q_START_IDX], queue1[Q_END_IDX], queue1[Q_START]);
 
     // printf("setting q2 \n");
     queue2[Q_START_IDX] = Q_START;
     queue2[Q_END_IDX] = Q_START;
-    queueVertex(p2, queue2, -1);
+    queueVertex(p2, -1, queue2, -1);
     // printf("finished setting q2 %ld %ld %ld\n", queue2[Q_START_IDX], queue2[Q_END_IDX], queue2[Q_START]);
 
     level1Record[LEVEL_START] = queue1[Q_END_IDX];
