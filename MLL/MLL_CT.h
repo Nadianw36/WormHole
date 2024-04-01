@@ -386,7 +386,6 @@ public:
     high_resolution_clock::time_point start_clock;
     high_resolution_clock::time_point end_clock;
     double runtime = 0;
-    duration<double, std::milli> tempRuntime = 0;
     if (!load_label_bp())
     {
       start_clock = high_resolution_clock::now();
@@ -394,7 +393,7 @@ public:
       end_clock = high_resolution_clock::now();
       save_label_bp();
 
-      tempRuntime = end_clock - start_clock;
+      auto tempRuntime = duration_cast<std::chrono::microseconds>(end_clock - start_clock);
       runtime += (double)tempRuntime.count();
       resultsFile << "construct_bp_label microseconds " << (double)tempRuntime.count() << "\n";
     }
@@ -407,7 +406,7 @@ public:
       end_clock = high_resolution_clock::now();
       save_label_tree();
       save_tmp_graph();
-      tempRuntime = end_clock - start_clock;
+      auto tempRuntime = duration_cast<std::chrono::microseconds>(end_clock - start_clock);
       runtime += (double)tempRuntime.count();
       resultsFile << "decompose_tree microseconds " << (double)tempRuntime.count() << "\n";
     }
@@ -429,7 +428,7 @@ public:
       // may remove the memory used by ctGraph
       ctGraph.clear(), ctGraph.shrink_to_fit();
       save_label_core();
-      tempRuntime = end_clock - start_clock;
+      auto tempRuntime = duration_cast<std::chrono::microseconds>(end_clock - start_clock);
       runtime += (double)tempRuntime.count();
       resultsFile << "decompose_core microseconds " << (double)tempRuntime.count() << "\n";
     }
@@ -448,11 +447,11 @@ public:
       end_clock = high_resolution_clock::now();
       save_label_tree();
       save_ptdL();
-      tempRuntime = end_clock - start_clock;
+      auto tempRuntime = duration_cast<std::chrono::microseconds>(end_clock - start_clock);
       runtime += (double)tempRuntime.count();
       resultsFile << "compute_global_tree_label microseconds " << (double)tempRuntime.count() << "\n";
     }
-    resultsFile << "total " << runtime.count() << "\n";
+    resultsFile << "total " << runtime << "\n";
     resultsFile.close();
   }
 

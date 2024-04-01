@@ -118,7 +118,6 @@ int main(int argc, char *argv[])
 
     high_resolution_clock::time_point start_clock;
     high_resolution_clock::time_point end_clock;
-    duration<double, std::milli> runtime;
 
     int s, t;
     while (ifs >> s >> t)
@@ -127,7 +126,7 @@ int main(int argc, char *argv[])
       auto p = mc.query_path_with_original_id(s, t);
       end_clock = high_resolution_clock::now();
 
-      runtime = end_clock - start_clock;
+      auto runtime = duration_cast<std::chrono::microseconds>(end_clock - start_clock);
       runtimesFile << (double)runtime.count() << "\n";
       distancesFile << p.size() << "\n";
 
