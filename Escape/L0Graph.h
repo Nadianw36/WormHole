@@ -516,32 +516,27 @@ namespace Escape
       if (!L0[p1] && !L1[p1] && !L0[p2] && !L1[p2])
       { // BiBFS within L2 neighborhood(s)
         int L2_distance = L2_to_L2(p1, p2);
-        // printf("L2->L2: %d, p1 L2 %ld, p2 L2 %ld\n", distance, p1_L2_pt, p2_L2_pt);
+        // printf("L2->L2: %d, p1 L2 %ld %d, p2 L2 %ld %d\n", distance, p1_L2_pt, distance[p1_L2_pt], p2_L2_pt, distance[p2_L2_pt]);
 
         if (L2_distance > 0 || (p1_L2_pt < 0 || p2_L2_pt < 0))
           return L2_distance; // found path or path not possible
-
-        pathDistance = distance[p1_L2_pt] + (-1) * distance[p2_L2_pt] - 2;
       }
 
       Ln_to_L0 p1_distance = distance_Ln_to_L0(p1, p1_L2_pt, queue1, 1);
-      // printf("p1 dist %d \n", p1_distance.distance);
+      // printf("p1 dist %d ec %d\n", p1_distance.distance, p1_distance.early_connection);
 
       Ln_to_L0 p2_distance = distance_Ln_to_L0(p2, p2_L2_pt, queue2, -1);
-      // printf("p2 dist %d \n", p2_distance.distance);
+      // printf("p2 dist %d ec %d\n", p2_distance.distance, p2_distance.early_connection);
 
       outside_core_end_clock = chrono::high_resolution_clock::now();
 
-      if (p1_distance.distance < 0 || p2_distance.distance < 0)
+      if (p1_distance.distance < 0 || (!p2_distance.early_connection && p2_distance.distance < 0))
         return -1;
 
       pathDistance += p1_distance.distance + p2_distance.distance;
 
       if (p2_distance.early_connection)
-      {
-
         return pathDistance;
-      }
 
       if (optimized)
         pathDistance += distance_L0_to_L0_Optimized();
@@ -603,13 +598,12 @@ namespace Escape
         int pathDistance = 0;
         if (L2_p < 0)
         { // means we have not seen p's L2+ neighborhood
-          Ln_to_L2 l1_connection = shortest_path_to_L2(p, queue, dist);
-          if (l1_connection.distance < 0)
+          L2_p = shortest_path_to_L2(p, queue, dist);
+          if (L2_p < 0)
             return {-1, false}; // neighborhood is disconnected
-          pathDistance = l1_connection.distance;
-          L2_p = l1_connection.L2_pt;
         }
-        // printf("L2_p %ld distance %d\n", L2_p, pathDistance);
+        pathDistance = (dist * distance[L2_p]) - 1;
+        // printf("L2_p %ld distance %d %d %d\n", L2_p, pathDistance, distance[L2_p], distance[p]);
 
         VertexIdx nbor;
         VertexIdx L0nbor;
@@ -619,10 +613,10 @@ namespace Escape
           nbor = nbors[j];
           if (L1[nbor])
           {
-            // printf("   neighbor in L1 %ld %ld\n", nbor, visited[nbor]);
+            // printf("   neighbor in L1 %ld %d\n", nbor, visited[nbor]);
             if (visited[nbor])
             {
-              return {pathDistance - 1, true}; // see line 595
+              return {pathDistance, true}; // see line 595
             }
             visited[nbor] = true;
             for (EdgeIdx i = offsets[nbor]; i < offsets[nbor + 1]; i++)
@@ -631,7 +625,7 @@ namespace Escape
               if (L0[L0nbor])
               {
                 // printf("      neighbor in L0 %ld %d\n", L0nbor, visited[L0nbor]);
-                if (visited[L0nbor])
+                if (visited[L0nbor] && distance[L0nbor] != dist)
                   return {pathDistance + 2, true};
                 queueVertex(L0nbor, queue, dist);
               }
@@ -774,21 +768,16 @@ namespace Escape
      *
      * @param p1
      * @param visited
-     * @return Ln_to_L2 storing {L2 endpoint, distance} or {-1, -1} if no path was found
+     * @return VertexIdx L2 point first reached
      */
-    Ln_to_L2 shortest_path_to_L2(VertexIdx p, VertexIdx *queue, int distanceIncrement)
+    VertexIdx shortest_path_to_L2(VertexIdx p, VertexIdx *queue, int distanceIncrement)
     {
       queue[Q_START_IDX] = Q_START;
       queue[Q_END_IDX] = Q_START;
       queueVertex(p, queue, distanceIncrement);
       // printf("q start + end %ld %ld %ld\n", queue[Q_START_IDX], queue[Q_END_IDX], queue[queue[Q_START_IDX]]);
 
-      VertexIdx L2_pt = shortest_path_to_L2(queue, distanceIncrement);
-
-      int d = -1;
-      if (L2_pt != -1)
-        d = (distanceIncrement * distance[L2_pt]) - 1;
-      return {L2_pt, d};
+      return shortest_path_to_L2(queue, distanceIncrement);
     }
 
     /**
@@ -815,7 +804,7 @@ namespace Escape
           }
           if (!visited[nbor])
           {
-            queueVertex(nbor, queue, distanceIncrement);
+            queueVertex(nbor, queue, distance[v] + distanceIncrement);
           }
         }
       }

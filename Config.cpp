@@ -54,7 +54,7 @@ void Escape::checkSetupFor(string graph_name)
 
 std::string Escape::getSubfolderName(std::string command)
 {
-    if (!command.compare("L0"))
+    if (!command.compare("L0-BiBFS"))
         return L0_FOLDER + BIBFS_FOLDER;
     if (!command.compare("BiBFS"))
         return BIBFS_FOLDER;

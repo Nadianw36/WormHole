@@ -10,7 +10,7 @@ exe/.deps
 # input folders
 results
 bin
-input
+inputs
 
 libescape.a
 *.o

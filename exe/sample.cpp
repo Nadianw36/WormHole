@@ -32,6 +32,8 @@ int main(int argc, char *argv[])
   if (d_pos != std::string::npos)
     graph_name = graph_L0_name.substr(0, d_pos);
 
+  checkSetupFor(graph_name);
+
   std::string str_start = argv[3];
   std::string str_finish = argv[4];
 
@@ -61,6 +63,7 @@ int main(int argc, char *argv[])
   // make files
   // printf("created variables\n");
   L0Graph L0 = L0Graph(cg, graph_L0_name);
+  L0.checkForBadL0();
 
   std::ofstream nodesTouchedFile;
   std::ofstream queryTouchedFile;
@@ -132,10 +135,10 @@ int main(int argc, char *argv[])
   std::ifstream inputFile;
   inputFile.open(INPUT_FOLDER + graph_name + "_input.txt");
 
-  if (command == "L0")
+  if (command == "L0-BiBFS")
   {
-    hopsInCoreFile.open(results_path + "_hops_in_core.txt");
-    distToReachCoreFile.open(results_path + "_distance_to_core.txt");
+    // hopsInCoreFile.open(results_path + "_hops_in_core.txt");
+    // distToReachCoreFile.open(results_path + "_distance_to_core.txt");
     runtimeToReachCoreFile.open(results_path + "_runtime_to_core.txt");
   }
 
@@ -207,7 +210,7 @@ int main(int argc, char *argv[])
     // int actual = pll_graph.QueryDistance(v1, v2);
     std::chrono::high_resolution_clock::time_point end_clock;
     start_clock = std::chrono::high_resolution_clock::now();
-    if (command == "L0")
+    if (command == "L0-BiBFS")
     {
       distance = L0.estimate_distance(v1, v2, false); // for now don't run with PLL
       visited = L0.getVisited();
@@ -223,7 +226,7 @@ int main(int argc, char *argv[])
       failedSampleFile << (int64_t)v1 << " " << (int64_t)v2 << " " << round << "\n";
       continue;
     }
-    if (command == "L0")
+    if (command == "L0-BiBFS")
     {
       L2_to_L0_runtimes.push_back(sample.p1_time_to_L0);
       L2_to_L0_dist.push_back(sample.p1_dist_to_L0);
@@ -275,7 +278,7 @@ int main(int argc, char *argv[])
     queriesAccumulatedWithoutSampleFile << e << "\n";
   for (const auto &e : queriesAccumulated)
     queriesAccumulatedFile << e << "\n";
-  if (command == "L0")
+  if (command == "L0-BiBFS")
   {
     for (const auto &e : L2_to_L0_runtimes)
       runtimeToReachCoreFile << e << "\n";
