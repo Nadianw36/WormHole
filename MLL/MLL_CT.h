@@ -380,7 +380,7 @@ public:
 
   void construct_ctl_ptdl_seperately()
   {
-    std::ifstream resultsFile;
+    std::ofstream resultsFile;
     resultsFile.open("../results/" + params.dataset + "/MLL/" + params.dataset + "_MLL_initialization.txt");
 
     high_resolution_clock::time_point start_clock;
