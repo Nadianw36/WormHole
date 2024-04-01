@@ -90,9 +90,12 @@ int main(int argc, char *argv[])
   {
     std::string resultsPrefix = "../results/" + params.dataset + "/MLL/" + params.dataset + "_MLL_";
 
-    std::ofstream distancesFile = distancesFile.open(resultsPrefix + "distances.txt");
-    std::ofstream pathsFile = distancesFile.open(resultsPrefix + "paths.txt");
-    std::ofstream runtimesFile = runtimesFile.open(resultsPrefix + "runtimes.txt");
+    std::ofstream distancesFile;
+    distancesFile.open(resultsPrefix + "distances.txt");
+    std::ofstream pathsFile;
+    distancesFile.open(resultsPrefix + "paths.txt");
+    std::ofstream runtimesFile;
+    runtimesFile.open(resultsPrefix + "runtimes.txt");
 
     mll_ct mc;
     mc.load_label();
@@ -115,6 +118,7 @@ int main(int argc, char *argv[])
 
     high_resolution_clock::time_point start_clock;
     high_resolution_clock::time_point end_clock;
+    duration<double, std::milli> runtime;
 
     int s, t;
     while (ifs >> s >> t)
@@ -123,7 +127,8 @@ int main(int argc, char *argv[])
       auto p = mc.query_path_with_original_id(s, t);
       end_clock = high_resolution_clock::now();
 
-      runtimesFile << (double)(end_clock - start_clock) << "\n";
+      runtime = end_clock - start_clock;
+      runtimesFile << (double)runtime.count() << "\n";
       distancesFile << p.size() << "\n";
 
       for (unsigned int i : p)

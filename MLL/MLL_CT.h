@@ -380,19 +380,22 @@ public:
 
   void construct_ctl_ptdl_seperately()
   {
-    std::ifstream resultsFile = resultsFile.open("../results/" + params.dataset + "/MLL/" + params.dataset + "_MLL_initialization.txt");
+    std::ifstream resultsFile;
+    resultsFile.open("../results/" + params.dataset + "/MLL/" + params.dataset + "_MLL_initialization.txt");
 
     high_resolution_clock::time_point start_clock;
     high_resolution_clock::time_point end_clock;
-    duration<double, std::milli> duration = 0;
+    duration<double, std::milli> runtime = 0;
+    duration<double, std::milli> tempRuntime = 0;
     if (!load_label_bp())
     {
       start_clock = high_resolution_clock::now();
       construct_bp_label();
       end_clock = high_resolution_clock::now();
       save_label_bp();
-      duration += end_clock - start_clock;
-      resultsFile << "construct_bp_label microseconds " << (double)end_clock - start_clock << "\n";
+      runtime += end_clock - start_clock;
+      tempRuntime = end_clock - start_clock;
+      resultsFile << "construct_bp_label microseconds " << (double)tempRuntime.count() << "\n";
     }
     // decompose_tree
     if (!load_label_tree())
@@ -403,8 +406,9 @@ public:
       end_clock = high_resolution_clock::now();
       save_label_tree();
       save_tmp_graph();
-      duration += end_clock - start_clock;
-      resultsFile << "decompose_tree microseconds " << (double)end_clock - start_clock << "\n";
+      runtime += end_clock - start_clock;
+      tempRuntime = end_clock - start_clock;
+      resultsFile << "decompose_tree microseconds " << (double)tempRuntime.count() << "\n";
     }
     else
     {
@@ -424,8 +428,9 @@ public:
       // may remove the memory used by ctGraph
       ctGraph.clear(), ctGraph.shrink_to_fit();
       save_label_core();
-      duration += end_clock - start_clock;
-      resultsFile << "decompose_core microseconds " << (double)end_clock - start_clock << "\n";
+      runtime += end_clock - start_clock;
+      tempRuntime = end_clock - start_clock;
+      resultsFile << "decompose_core microseconds " << (double)tempRuntime.count() << "\n";
     }
     else
     {
@@ -442,10 +447,11 @@ public:
       end_clock = high_resolution_clock::now();
       save_label_tree();
       save_ptdL();
-      duration += end_clock - start_clock;
-      resultsFile << "compute_global_tree_label microseconds " << (double)end_clock - start_clock << "\n";
+      runtime += end_clock - start_clock;
+      tempRuntime = end_clock - start_clock;
+      resultsFile << "compute_global_tree_label microseconds " << (double)tempRuntime.count() << "\n";
     }
-    resultsFile << "total " << (double)duration << "\n";
+    resultsFile << "total " << runtime.count() << "\n";
     resultsFile.close();
   }
 
