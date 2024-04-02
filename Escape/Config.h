@@ -22,6 +22,7 @@ namespace Escape
     extern string RESULTS_FOLDER;
     extern string BIN_FOLDER;
     extern string BIBFS_FOLDER;
+    extern string MLL_FOLDER;
     extern string QBS_FOLDER;
     extern string L0_FOLDER;
     extern string DEGREES_FOLDER;
