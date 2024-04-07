@@ -230,12 +230,8 @@ int main(int argc, char *argv[])
     }
     if (command == "L0-BiBFS")
     {
-      L2_to_L0_runtimes.push_back(sample.p1_time_to_L0);
-      L2_to_L0_dist.push_back(sample.p1_dist_to_L0);
-      L2_to_L0_runtimes.push_back(sample.p2_time_to_L0);
-      L2_to_L0_dist.push_back(sample.p2_dist_to_L0);
-      L0_hops.push_back(sample.p1_L0_hops);
-      L0_hops.push_back(sample.p2_L0_hops);
+      auto duration = duration_cast<std::chrono::microseconds>(L0.outside_core_end_clock - L0.outside_core_start_clock);
+      L2_to_L0_runtimes.push_back((double)(duration.count()));
       vector<VertexIdx> path = L0.recoverPath(v1, v2);
       for (const auto &p : path)
         pathsFile << p << " ";
