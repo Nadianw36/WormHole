@@ -110,38 +110,29 @@ int main(int argc, char *argv[])
   std::vector<int> runtimes;
   std::vector<int> L2_to_L0_runtimes;
   std::vector<int> L2_to_L0_dist;
-  std::vector<int> L0_hops;
 
-  std::ofstream distancesFile;
-  std::ofstream pathsFile;
+  std::ofstream distancesFile(results_path + "_distances.txt");
+  std::ofstream pathsFile(results_path + "_paths.txt");
   std::ofstream distToReachCoreFile;
   std::ofstream hopsInCoreFile;
-  std::ofstream runtimesFile;
+  std::ofstream runtimesFile(results_path + "_runtimes.txt");
   std::ofstream runtimeToReachCoreFile;
-  std::ofstream failedSampleFile;
-  std::ofstream queriesFile;
-  std::ofstream queriesAccumulatedFile;
-  std::ofstream queriesAccumulatedWithoutSampleFile;
+  std::ofstream failedSampleFile(results_path + "_failed.txt");
+  std::ofstream queriesFile(results_path + "_queries.txt");
+  std::ofstream queriesAccumulatedFile(results_path + "_queries_accumulated.txt");
+  std::ofstream queriesAccumulatedWithoutSampleFile(results_path + "_queries_accumulated_without_sample.txt");
 
-  distancesFile.open(results_path + "_distances.txt");
-  pathsFile.open(results_path + "_paths.txt");
-  runtimesFile.open(results_path + "_runtimes.txt");
-  failedSampleFile.open(results_path + "_failed.txt");
-  queriesFile.open(results_path + "_queries.txt");
+  std::ofstream coreQueriesRandomL0File;
+  std::ofstream coreQueriesRandomL0RandomL1File;
 
-  // if(command=="L0") {
-  queriesAccumulatedFile.open(results_path + "_queries_accumulated.txt");
-  queriesAccumulatedWithoutSampleFile.open(results_path + "_queries_accumulated_without_sample.txt");
-  // queriesListFile.open(results_path + "_queries_list.txt");
-  // }
   std::ifstream inputFile;
   inputFile.open(INPUT_FOLDER + graph_name + "_input.txt");
 
   if (command == "L0-BiBFS")
   {
-    // hopsInCoreFile.open(results_path + "_hops_in_core.txt");
-    // distToReachCoreFile.open(results_path + "_distance_to_core.txt");
     runtimeToReachCoreFile.open(results_path + "_runtime_to_core.txt");
+    coreQueriesRandomL0File.open(results_path + "_core-queries_random-L0.txt");
+    coreQueriesRandomL0RandomL1File.open(results_path + "_core-queries_random-L0-random-L1.txt");
   }
 
   // printf("starting round\n");
@@ -176,9 +167,6 @@ int main(int argc, char *argv[])
         for (const auto &e : L2_to_L0_dist)
           distToReachCoreFile << e << "\n";
         L2_to_L0_dist.clear();
-        for (const auto &e : L0_hops)
-          hopsInCoreFile << e << "\n";
-        L0_hops.clear();
       }
 
       distances.clear();
@@ -236,6 +224,10 @@ int main(int argc, char *argv[])
       for (const auto &p : path)
         pathsFile << p << " ";
       pathsFile << "\n";
+
+      L0.sampleL0Vertices(v1, v2);
+      coreQueriesRandomL0File << L0.randomL0V1 << " " << L0.randomL0V2 << std::endl;
+      coreQueriesRandomL0RandomL1File << L0.randomL0FromRandomL1V1 << " " << L0.randomL0FromRandomL1V2 << std::endl;
     }
     else
     {
@@ -257,19 +249,10 @@ int main(int argc, char *argv[])
     {
       if (visited[i])
       {
-        // if(command=="BiBFS"&& !nodesTouched[i]){
-        //     nodesTouched[i] = true;
-        //     queryTouched[i] = round - startFrom;
-        // } else if (command=="L0"){
         nodesTouched[i] = true;
         nodesTouchedWithoutSample[i] = true;
-        // queriesListFile << (int64_t) i << " ";
-        // }
       }
     }
-    // if(command=="L0"){
-    //   queriesListFile << "\n";
-    // }
     nodesTouched[v1] = true;
     nodesTouched[v2] = true;
 
@@ -295,8 +278,7 @@ int main(int argc, char *argv[])
     for (const auto &e : L2_to_L0_dist)
       distToReachCoreFile << e << "\n";
     distToReachCoreFile.close();
-    for (const auto &e : L0_hops)
-      hopsInCoreFile << e << "\n";
+
     hopsInCoreFile.close();
     // queriesListFile.close();
     queriesAccumulatedFile.close();

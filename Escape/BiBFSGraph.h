@@ -112,7 +112,7 @@ namespace Escape
             secondParent = -1;
         }
 
-        vector<VertexIdx> recoverPath(VertexIdx s, VertexIdx t)
+        vector<VertexIdx> recoverPath(VertexIdx s, VertexIdx t) const
         {
             vector<VertexIdx> path;
             path.push_back(mergeVertex);
@@ -144,6 +144,12 @@ namespace Escape
 
         bool Q1empty() const { return queue1[Q_START_IDX] == queue1[Q_END_IDX]; }
         bool Q2empty() const { return queue2[Q_START_IDX] == queue2[Q_END_IDX]; }
+
+        void resetQueue(VertexIdx *queue)
+        {
+            queue[Q_START_IDX] = Q_START;
+            queue[Q_END_IDX] = Q_START;
+        }
 
         bool virtual exploreVertexQ1(VertexIdx nbor, VertexIdx parent) { return true; }
         bool virtual exploreVertexQ2(VertexIdx nbor, VertexIdx parent) { return true; }

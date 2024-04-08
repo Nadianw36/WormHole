@@ -54,10 +54,12 @@ namespace Escape
     PrunedLandmarkLabeling<> pll;
     ofstream output;
     chrono::high_resolution_clock::time_point outside_core_start_clock, outside_core_end_clock;
+    VertexIdx randomL0V1, randomL0V2, randomL0FromRandomL1V1, randomL0FromRandomL1V2;
 
     // shared variables
     int acc_distance, L0_distance;
     VertexIdx p1_L2_pt, p2_L2_pt;
+    bool earlyConnection;
     bool L0traversal; // true means BiBFS through L0 else BiBFS through L2
 
     L0Graph() {}
@@ -70,6 +72,7 @@ namespace Escape
      */
     L0Graph(const BiBFSGraph &graph, string graphName) : BiBFSGraph(graph)
     {
+
       string graphNameStem = graphName;
       string delimiter = "_";
       size_t d_pos = graphName.find(delimiter);
@@ -504,6 +507,7 @@ namespace Escape
       p1_L2_pt = -1;
       p2_L2_pt = -1;
       int pathDistance = 0;
+      earlyConnection = false;
 
       // printf("vertices: %d, %d\n", p1, p2);
       // printf("L0: %d, %d\n", L0[p1], L0[p2]);
@@ -519,7 +523,10 @@ namespace Escape
         // printf("L2->L2: %d, p1 L2 %ld %d, p2 L2 %ld %d\n", distance, p1_L2_pt, distance[p1_L2_pt], p2_L2_pt, distance[p2_L2_pt]);
 
         if (L2_distance > 0 || (p1_L2_pt < 0 || p2_L2_pt < 0))
+        {
+          earlyConnection = true;
           return L2_distance; // found path or path not possible
+        }
       }
 
       Ln_to_L0 p1_distance = distance_Ln_to_L0(p1, p1_L2_pt, queue1, 1);
@@ -536,7 +543,10 @@ namespace Escape
       pathDistance += p1_distance.distance + p2_distance.distance;
 
       if (p2_distance.early_connection)
+      {
+        earlyConnection = true;
         return pathDistance;
+      }
 
       if (optimized)
         pathDistance += distance_L0_to_L0_Optimized();
@@ -559,10 +569,9 @@ namespace Escape
      * @param dist - should be 1 if from side 1; otherwise -1 (from side 2)
      * @return Ln_to_L0 {distance, early connection through L1}
      */
-    Ln_to_L0 distance_Ln_to_L0(VertexIdx p, VertexIdx L2_p, VertexIdx *queue, int dist)
+    Ln_to_L0 distance_Ln_to_L0(VertexIdx p, VertexIdx &L2_p, VertexIdx *queue, int dist)
     {
-      queue[Q_START_IDX] = Q_START;
-      queue[Q_END_IDX] = Q_START;
+      resetQueue(queue);
 
       if (L0[p])
       {
@@ -618,6 +627,8 @@ namespace Escape
         }
         pathDistance = (dist * distance[L2_p]) - 1;
         // printf("L2_p %ld distance %d %d %d\n", L2_p, pathDistance, distance[L2_p], distance[p]);
+
+        resetQueue(queue);
 
         VertexIdx nbor;
         VertexIdx L0nbor;
@@ -694,6 +705,17 @@ namespace Escape
         }
         return true;
       }
+    }
+
+    int distance_L0_to_L0(VertexIdx v1, VertexIdx v2)
+    {
+      resetQueue(queue1);
+      queueVertex(v1, -1, queue1, 1);
+
+      resetQueue(queue2);
+      queueVertex(v2, -1, queue2, -1);
+
+      return distance_L0_to_L0();
     }
 
     int distance_L0_to_L0()
@@ -881,6 +903,139 @@ namespace Escape
           }
         }
       }
+    }
+    /**
+     * sample random L0 vertices --> assumes that L0 has already been loaded on queue
+     * so must call distanceToCore first
+     */
+    void sampleL0Vertices(VertexIdx v1, VertexIdx v2)
+    {
+      srand(time(NULL));
+
+      randomL0FromRandomL1V1 = -1;
+      randomL0FromRandomL1V2 = -1;
+
+      randomL0V1 = -1;
+      randomL0V2 = -1;
+
+      if (earlyConnection)
+        return;
+
+      if (!L0[v1])
+      {
+        // printf("looking for randomL0V1\n");
+        VertexIdx sample1 = (rand() % (level1Record[LEVEL_START] - Q_START)) + Q_START;
+        randomL0V1 = queue1[sample1];
+        randomL0FromRandomL1V1 = randomL0V1;
+        // printf(" sampling for random L0 v %ld %ld %ld\n", (level1Record[LEVEL_START] - Q_START), sample1, queue1[sample1]);
+      }
+      else
+      {
+        randomL0V1 = v1;
+        randomL0FromRandomL1V1 = v1;
+      }
+
+      if (!L0[v2])
+      {
+        // printf("looking for randomL0V2\n");
+        VertexIdx sample2 = (rand() % (level2Record[LEVEL_START] - Q_START)) + Q_START;
+        randomL0V2 = queue2[sample2];
+        randomL0FromRandomL1V2 = randomL0V2;
+        // printf("  sampling for random L0 v %ld %ld %ld\n", (level2Record[LEVEL_START] - Q_START), sample2, queue2[sample2]);
+      }
+      else
+      {
+        randomL0V2 = v2;
+        randomL0FromRandomL1V2 = v2;
+      }
+      VertexIdx tempRandomL0FromRandomL1V1 = sampleL0VertexFromL1(p1_L2_pt);
+      VertexIdx tempRandomL0FromRandomL1V2 = sampleL0VertexFromL1(p2_L2_pt);
+      // printf("%ld %ld\n", tempRandomL0FromRandomL1V1, tempRandomL0FromRandomL1V2);
+
+      if (tempRandomL0FromRandomL1V1 > 0)
+        randomL0FromRandomL1V1 = tempRandomL0FromRandomL1V1;
+      if (tempRandomL0FromRandomL1V2 > 0)
+        randomL0FromRandomL1V2 = tempRandomL0FromRandomL1V2;
+
+      if ((randomL0FromRandomL1V1 > 0 && !L0[randomL0FromRandomL1V1]) ||
+          (randomL0FromRandomL1V2 > 0 && !L0[randomL0FromRandomL1V2]) ||
+          (randomL0V1 > 0 && !L0[randomL0V1]) ||
+          (randomL0V2 > 0 && !L0[randomL0V2]))
+        printf("fucked %ld %ld %d\n", v1, v2, earlyConnection);
+    }
+
+    VertexIdx sampleL0VertexFromL1(VertexIdx L2_p)
+    {
+
+      if (L2_p > 0)
+      {
+        // printf(" sampling for L1 v %ld\n", L2_p);
+        VertexIdx *L1Vertices = new VertexIdx[degree(L2_p)];
+        VertexIdx endL1Vertices = 0;
+        for (EdgeIdx j = offsets[L2_p]; j < offsets[L2_p + 1]; j++)
+        {
+          VertexIdx nbor = nbors[j];
+          if (L1[nbor])
+            L1Vertices[endL1Vertices++] = nbor;
+        }
+
+        VertexIdx sample = rand() % endL1Vertices;
+        // printf(" sampling for L1 v %ld %ld %ld\n", endL1Vertices, sample, L1Vertices[sample]);
+        VertexIdx L1VertexSample = L1Vertices[sample];
+
+        VertexIdx *L0Vertices = new VertexIdx[degree(L1VertexSample)];
+        VertexIdx endL0Vertices = 0;
+
+        for (EdgeIdx j = offsets[L1VertexSample]; j < offsets[L1VertexSample + 1]; j++)
+        {
+          VertexIdx nbor = nbors[j];
+          if (L0[nbor])
+            L0Vertices[endL0Vertices++] = nbor;
+        }
+
+        sample = rand() % endL0Vertices;
+        // printf(" sampling for L0 v %ld %ld %ld\n", endL0Vertices, sample, L0Vertices[sample]);
+
+        return L0Vertices[sample];
+      }
+      return -1;
+    }
+
+    EdgeIdx getCoreEdgeCount()
+    {
+      EdgeIdx nEdgesCore = 0;
+      for (VertexIdx i = 0; i < nVertices; i++)
+      {
+        if (!L0[i])
+          continue;
+        for (EdgeIdx j = offsets[i]; j < offsets[i + 1]; j++)
+        {
+          VertexIdx nbor = nbors[j];
+          if (L0[nbor])
+            nEdgesCore++;
+        }
+      }
+    }
+
+    void writeCoreCOO(std::string graphName)
+    {
+      ofstream L0File(GRAPH_FOLDER + graphName + "_core-COO.txt", ios::out | ios::binary);
+
+      EdgeIdx nEdgesCore = getCoreEdgeCount();
+
+      L0File << nVerticesL0 << "  " << nEdgesCore << std::endl;
+      for (VertexIdx i = 0; i < nVertices; i++)
+      {
+        if (!L0[i])
+          continue;
+        for (EdgeIdx j = offsets[i]; j < offsets[i + 1]; j++)
+        {
+          VertexIdx nbor = nbors[j];
+          if (L0[nbor] && nbor > i)
+            L0File << i << "  " << nbor << std::endl;
+        }
+      }
+      L0File.close();
     }
   };
 

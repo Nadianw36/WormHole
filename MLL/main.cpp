@@ -89,6 +89,10 @@ int main(int argc, char *argv[])
   else if (params.sub_cmd == "query")
   {
     std::string resultsPrefix = "../results/" + params.dataset + "/MLL/" + params.dataset + "_MLL_";
+    if (params.dataset.contains("seed"))
+    {
+      resultsPrefix = "../results/" + params.dataset + "/L0/MLL/" + params.dataset + "_MLL_";
+    }
 
     std::ofstream distancesFile;
     distancesFile.open(resultsPrefix + "distances.txt");
@@ -122,6 +126,13 @@ int main(int argc, char *argv[])
     int s, t;
     while (ifs >> s >> t)
     {
+      if (s < 0 || t < 0)
+      {
+        runtimesFile << -1 << "\n";
+        distancesFile << -1 << "\n";
+        pathsFile << -1 << "\n";
+      }
+
       start_clock = high_resolution_clock::now();
       auto p = mc.query_path_with_original_id(s, t);
       end_clock = high_resolution_clock::now();

@@ -111,31 +111,18 @@ int BiBFSGraph::bidirectionalBFS()
 
 int BiBFSGraph::BidirectionalBFS(VertexIdx p1, VertexIdx p2)
 {
-    // printf("resetting \n");
     reset();
-    // printf("setting distance \n");
 
-    // printf("setting q1 \n");
-    queue1[Q_START_IDX] = Q_START;
-    queue1[Q_END_IDX] = Q_START;
+    resetQueue(queue1);
     queueVertex(p1, -1, queue1, 1);
-    // printf("finished setting q1 %ld %ld %ld\n", queue1[Q_START_IDX], queue1[Q_END_IDX], queue1[Q_START]);
 
-    // printf("setting q2 \n");
-    queue2[Q_START_IDX] = Q_START;
-    queue2[Q_END_IDX] = Q_START;
+    resetQueue(queue2);
     queueVertex(p2, -1, queue2, -1);
-    // printf("finished setting q2 %ld %ld %ld\n", queue2[Q_START_IDX], queue2[Q_END_IDX], queue2[Q_START]);
-
     level1Record[LEVEL_START] = queue1[Q_END_IDX];
     level1Record[LEVEL_IDX] = LEVEL_START;
 
-    // printf("finished level record 1 %ld %ld %ld\n", level1Record[LEVEL_IDX], level1Record[LEVEL_START]);
-
     level2Record[LEVEL_START] = queue2[Q_END_IDX];
     level2Record[LEVEL_IDX] = LEVEL_START;
-
-    // printf("finished level record 2 %ld %ld %ld\n", level2Record[LEVEL_IDX], level2Record[LEVEL_START]);
 
     return bidirectionalBFS();
 };
