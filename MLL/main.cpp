@@ -89,15 +89,36 @@ int main(int argc, char *argv[])
   else if (params.sub_cmd == "query")
   {
     std::string resultsPrefix = "../results/" + params.dataset + "/MLL/" + params.dataset + "_MLL_";
-    if (params.dataset.contains("seed"))
+    if (params.dataset.find("seed") != std::string::npos)
     {
-      resultsPrefix = "../results/" + params.dataset + "/L0/MLL/" + params.dataset + "_MLL_";
+      std::string graph_name = params.dataset;
+
+      std::string delimiter = "_";
+      std::size_t d_pos = params.dataset.find(delimiter);
+      if (d_pos != std::string::npos)
+        graph_name = params.dataset.substr(0, d_pos);
+
+      std::string graphL0Name = params.dataset.substr(0, params.dataset.find("_core_COO"));
+      std::string input_type = "_random-L0_";
+      if (params.query_path.find("random-L1") != std::string::npos)
+      {
+        input_type = "_random-L0-random-L1_";
+      }
+      else if (params.query_path.find("highest-deg-L0") != std::string::npos)
+      {
+        input_type = "_highest-deg-L0_";
+      }
+      else if (params.query_path.find("all-pairs-L0") != std::string::npos)
+      {
+        input_type = "_all-pairs-L0_";
+      }
+      resultsPrefix = "../results/" + graph_name + "/L0/MLL/" + graphL0Name + input_type + "MLL_";
     }
 
     std::ofstream distancesFile;
     distancesFile.open(resultsPrefix + "distances.txt");
     std::ofstream pathsFile;
-    distancesFile.open(resultsPrefix + "paths.txt");
+    pathsFile.open(resultsPrefix + "paths.txt");
     std::ofstream runtimesFile;
     runtimesFile.open(resultsPrefix + "runtimes.txt");
 
@@ -124,22 +145,34 @@ int main(int argc, char *argv[])
     high_resolution_clock::time_point end_clock;
 
     int s, t;
+    long long int totalRuntime = 0;
+    int totalQueries = 0;
     while (ifs >> s >> t)
     {
-      if (s < 0 || t < 0)
+      if (s < -1 || t < -1)
+      {
+        runtimesFile << -2 << "\n";
+        distancesFile << -2 << "\n";
+        pathsFile << -2 << "\n";
+        continue;
+      }
+      else if (s < 0 || t < 0)
       {
         runtimesFile << -1 << "\n";
         distancesFile << -1 << "\n";
         pathsFile << -1 << "\n";
+        continue;
       }
 
       start_clock = high_resolution_clock::now();
       auto p = mc.query_path_with_original_id(s, t);
       end_clock = high_resolution_clock::now();
 
-      auto runtime = duration_cast<std::chrono::microseconds>(end_clock - start_clock);
-      runtimesFile << (double)runtime.count() << "\n";
+      auto runtime = duration_cast<std::chrono::nanoseconds>(end_clock - start_clock);
+      runtimesFile << (long long int)runtime.count() << "\n";
       distancesFile << p.size() << "\n";
+      totalRuntime += (long long int)runtime.count();
+      totalQueries++;
 
       for (unsigned int i : p)
       {
@@ -147,7 +180,7 @@ int main(int argc, char *argv[])
       }
       pathsFile << "\n";
     }
-
+    printf("MLL on %s completed %d inqueries in %lld nanoseconds\n", params.dataset, totalQueries, totalRuntime);
     distancesFile.close();
     pathsFile.close();
     runtimesFile.close();

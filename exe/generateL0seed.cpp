@@ -29,43 +29,39 @@ int main(int argc, char *argv[])
     ofstream graph_file(graph_results_folder + graph_name + type + ".txt");
 
     checkSetupFor(graph_name);
+    std::cout << std::setprecision(3);
 
-    // Graph g;
-    // if (loadGraph(graph_loc.c_str(), g, 1, IOFormat::escape))
-    // exit(1);
-    // printf("Loaded graph\n");
-    // CGraph cg = makeCSR(g);
-    // cg.sortById();
-    // printf("Converted to CSR\n");
     CGraph cg;
     cg.loadGraphFromFile(graph_name);
-    cout << cg.nEdges << endl;
-    cout << cg.nVertices << endl;
+    cout << cg.nVertices << " " << cg.nEdges << endl;
 
     VertexIdx vcount = cg.nVertices;
+
     int numL0s = 21;
     VertexIdx *L0_sizes = new VertexIdx[numL0s];
     for (int s = 0; s < numL0s; s++)
     {
         float percent = (float)s * 0.005;
         L0_sizes[s] = (VertexIdx)(percent * vcount);
-        printf("L0 size: %ld %f\n", L0_sizes[s], percent);
+        graph_file << "core size " << percent << "%: " << L0_sizes[s] << " vertices\n";
+        cout << "core size " << percent << "%: " << L0_sizes[s] << " vertices\n";
     }
+
     for (int L0_idx = 1; L0_idx < numL0s; L0_idx++)
     {
         auto start = chrono::high_resolution_clock::now();
         L0Graph L0 = L0Graph(cg, L0_sizes[L0_idx], high_degree_seed);
         auto end = chrono::high_resolution_clock::now();
-        auto duration = duration_cast<chrono::microseconds>(end - start);
-        double duration_count = (double)duration.count();
+        auto duration = duration_cast<chrono::nanoseconds>(end - start);
+        long long int duration_count = (double)duration.count();
         float percent = L0_idx * 0.5;
         string num_text = "_" + to_string(percent);
         string L0_size_str = num_text.substr(0, num_text.find(".") + 2);
         L0.checkForBadL0();
         L0.writeGraphToFile(graph_name + type + L0_size_str);
         L0.print_size(graph_file, graph_name + type + L0_size_str);
-        graph_file << "initialization time for " << percent << "%: " << duration_count << "\n";
-        std::cout << "initialization time for " << percent << "%: " << duration_count << "\n";
+        graph_file << "initialization time for " << percent << "%: " << duration_count << " nanoseconds\n";
+        std::cout << "initialization time for " << percent << "%: " << duration_count << " nanoseconds\n";
     }
     graph_file.close();
     return 0;

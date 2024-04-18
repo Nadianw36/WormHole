@@ -38,19 +38,11 @@ int main(int argc, char *argv[])
   std::string str_finish = argv[4];
 
   std::string results_graph_sub_folder = getSubfolderName(command);
-
   std::string results_folder = RESULTS_FOLDER + graph_name + "/" + results_graph_sub_folder;
-
   std::string results_prefix = str_start + "_" + str_finish + "_";
   std::string results_suffix = "_" + command;
+
   std::string results_path = results_folder + results_prefix + graph_L0_name + results_suffix;
-
-  std::string load_bin_prefix = str_start + "_";
-  std::string final_save_bin_prefix = str_finish + "_";
-  std::string load_bin_path = BIN_FOLDER + load_bin_prefix + graph_L0_name + results_suffix;
-  std::string final_save_bin_path = BIN_FOLDER + final_save_bin_prefix + graph_L0_name + results_suffix;
-
-  std::ofstream graph_file(results_folder + graph_name + results_suffix + ".txt");
 
   CGraph cg;
   cg.loadGraphFromFile(graph_name);
@@ -58,176 +50,165 @@ int main(int argc, char *argv[])
   int startFrom = stoi(str_start);
   int ROUNDS = stoi(str_finish);
 
-  // initialize varibles for sampling
-
   // make files
-  // printf("created variables\n");
   L0Graph L0 = L0Graph(cg, graph_L0_name);
   L0.checkForBadL0();
 
-  std::ofstream nodesTouchedFile;
-  std::ofstream queryTouchedFile;
-  // std::ofstream nodesTouchedWithoutSamplesFile;
-
-  bool *nodesTouched;
-  uint8_t *queryTouched;
-  bool *nodesTouchedWithoutSample;
-
   VertexIdx vcount = cg.nVertices;
-  // if(command == "BiBFS"){
-  //   nodesTouched = new bool[vcount];
-  //   queryTouched = new uint8_t[vcount];
-  //   std::fill_n(nodesTouched, vcount, false);
-  //   std::fill_n(queryTouched, vcount, 255);
-  // } else{
-  nodesTouched = new bool[vcount];
-  nodesTouchedWithoutSample = new bool[vcount];
+  bool *nodesTouched = new bool[vcount];
+  bool *nodesTouchedOutsideCore = new bool[vcount];
   std::fill_n(nodesTouched, vcount, false);
-  std::fill_n(nodesTouchedWithoutSample, vcount, false);
-  // }
-
-  if (startFrom == 0)
-  {
-
-    std::fill_n(nodesTouchedWithoutSample, vcount, false);
-  }
-  else
-  {
-    std::ifstream loadNodesTouchedFile(load_bin_path + "_nodesTouched.bin", std::ios::binary);
-    std::ifstream loadNodesTouchedWithoutSamplesFile(load_bin_path + "_nodesTouchedWithoutSamples.bin", std::ios::binary);
-
-    loadNodesTouchedFile.read((char *)nodesTouched, sizeof(bool) * (int64_t)vcount);
-    loadNodesTouchedWithoutSamplesFile.read((char *)nodesTouchedWithoutSample, sizeof(bool) * (int64_t)vcount);
-
-    loadNodesTouchedFile.close();
-    loadNodesTouchedWithoutSamplesFile.close();
-  }
-
-  std::vector<int> numQueries;
-  std::vector<int> queriesAccumulated;
-  std::vector<int> queriesAccumulatedWithoutSample;
-  std::vector<int> distances;
-  std::vector<int> runtimes;
-  std::vector<int> L2_to_L0_runtimes;
-  std::vector<int> L2_to_L0_dist;
+  std::fill_n(nodesTouchedOutsideCore, vcount, false);
 
   std::ofstream distancesFile(results_path + "_distances.txt");
   std::ofstream pathsFile(results_path + "_paths.txt");
-  std::ofstream distToReachCoreFile;
-  std::ofstream hopsInCoreFile;
-  std::ofstream runtimesFile(results_path + "_runtimes.txt");
-  std::ofstream runtimeToReachCoreFile;
+  std::ofstream runtimesFile(results_path + "_runtimes_nano.txt");
   std::ofstream failedSampleFile(results_path + "_failed.txt");
   std::ofstream queriesFile(results_path + "_queries.txt");
-  std::ofstream queriesAccumulatedFile(results_path + "_queries_accumulated.txt");
-  std::ofstream queriesAccumulatedWithoutSampleFile(results_path + "_queries_accumulated_without_sample.txt");
+  std::ofstream queriesAccumulatedFile(results_path + "_queries-accumulated.txt");
+
+  std::ofstream leftPathsFile;
+  std::ofstream rightPathsFile;
+  std::ofstream queriesOutsideCoreFile;
+  std::ofstream runtimeToReachCoreFile;
+  std::ofstream distToReachCoreFile;
+  std::ofstream queriesAccumulatedOutsideCoreFile;
 
   std::ofstream coreQueriesRandomL0File;
   std::ofstream coreQueriesRandomL0RandomL1File;
-
-  std::ifstream inputFile;
-  inputFile.open(INPUT_FOLDER + graph_name + "_input.txt");
+  std::ofstream coreQueriesHighestDegL0File;
+  std::ofstream coreQueriesAllPairsL0;
 
   if (command == "L0-BiBFS")
   {
-    runtimeToReachCoreFile.open(results_path + "_runtime_to_core.txt");
+    distToReachCoreFile.open(results_path + "_dist-to-core.txt");
+    runtimeToReachCoreFile.open(results_path + "_runtime-to-core_nano.txt");
+    queriesOutsideCoreFile.open(results_path + "_queries-outside-core.txt");
+    queriesAccumulatedOutsideCoreFile.open(results_path + "_queries-accumulated-outside-core.txt");
+
+    leftPathsFile.open(results_path + "_paths_v1-to-core.txt");
+    rightPathsFile.open(results_path + "_paths_core-to-v2.txt");
+
     coreQueriesRandomL0File.open(results_path + "_core-queries_random-L0.txt");
     coreQueriesRandomL0RandomL1File.open(results_path + "_core-queries_random-L0-random-L1.txt");
+    coreQueriesHighestDegL0File.open(results_path + "_core-queries_highest-deg-L0.txt");
+    coreQueriesAllPairsL0.open(results_path + "_core-queries_all-pairs-L0.txt");
   }
 
-  // printf("starting round\n");
+  std::ifstream inputFile(INPUT_FOLDER + graph_name + "_input.txt");
+  printf("starting round\n");
+  VertexIdx v1, v2;
+  long long int totalRuntime = 0;
+  long long int totalTimeSpentOutsideCore = 0;
+  int inquryCount = 0;
   for (int round = 0; round < ROUNDS; round++)
   {
-    VertexIdx v1;
-    VertexIdx v2;
     inputFile >> v1 >> v2;
     // printf("queryy %ld %ld %ld\n", round, v1, v2);
     if (round < startFrom || v1 == v2)
       continue;
 
-    if (round % 1000 == 0 && round != startFrom)
-    {
-      // printf("round %i\n", round);
-
-      for (const auto &e : distances)
-        distancesFile << e << "\n";
-      for (const auto &e : runtimes)
-        runtimesFile << e << "\n";
-      for (const auto &e : numQueries)
-        queriesFile << e << "\n";
-      for (const auto &e : queriesAccumulatedWithoutSample)
-        queriesAccumulatedWithoutSampleFile << e << "\n";
-      for (const auto &e : queriesAccumulated)
-        queriesAccumulatedFile << e << "\n";
-      if (command == "L0")
-      {
-        for (const auto &e : L2_to_L0_runtimes)
-          runtimeToReachCoreFile << e << "\n";
-        L2_to_L0_runtimes.clear();
-        for (const auto &e : L2_to_L0_dist)
-          distToReachCoreFile << e << "\n";
-        L2_to_L0_dist.clear();
-      }
-
-      distances.clear();
-      runtimes.clear();
-      numQueries.clear();
-      queriesAccumulated.clear();
-      queriesAccumulatedWithoutSample.clear();
-
-      std::string save_bin_prefix = to_string(round) + "_";
-      std::string save_bin_path = BIN_FOLDER + save_bin_prefix + graph_L0_name + results_suffix;
-
-      // nodesTouchedFile.open(save_bin_path + "_nodesTouched.bin", std::ios::binary);
-      // nodesTouchedWithoutSamplesFile.open(save_bin_path + "_nodesTouchedWithoutSamples.bin", std::ios::binary);
-
-      // nodesTouchedFile.write((char*)nodesTouched, sizeof(bool) * (int64_t) vcount);
-      // nodesTouchedWithoutSamplesFile.write((char*)nodesTouchedWithoutSample, sizeof(bool) * (int64_t) vcount);
-
-      // nodesTouchedFile.close();
-      // nodesTouchedWithoutSamplesFile.close();
-
-      // printf("uploaded through round %i\n", round - 1);
-    }
-
-    if (v1 == v2)
-      continue;
-
     std::chrono::high_resolution_clock::time_point start_clock;
-    SamplingInformation sample;
+    std::chrono::high_resolution_clock::time_point end_clock;
     int distance;
     bool *visited;
-    // int actual = pll_graph.QueryDistance(v1, v2);
-    std::chrono::high_resolution_clock::time_point end_clock;
-    start_clock = std::chrono::high_resolution_clock::now();
+
     if (command == "L0-BiBFS")
     {
+      start_clock = std::chrono::high_resolution_clock::now();
       distance = L0.estimate_distance(v1, v2, false); // for now don't run with PLL
+      end_clock = std::chrono::high_resolution_clock::now();
       visited = L0.getVisited();
     }
     else
     {
+      start_clock = std::chrono::high_resolution_clock::now();
       distance = bg.BidirectionalBFS(v1, v2);
+      end_clock = std::chrono::high_resolution_clock::now();
       visited = bg.getVisited();
     }
-    end_clock = std::chrono::high_resolution_clock::now();
+
     if (distance == -1)
     {
       failedSampleFile << (int64_t)v1 << " " << (int64_t)v2 << " " << round << "\n";
       continue;
     }
+
+    visited[v1] = true;
+    visited[v2] = true;
+
+    VertexIdx countVerticesOutsideCore = 0;
+    for (VertexIdx i = 0; i < vcount; i++)
+    {
+      if (visited[i])
+      {
+        nodesTouched[i] = true;
+        if (command == "L0-BiBFS" && !L0.L0[i])
+        {
+          countVerticesOutsideCore++;
+          nodesTouchedOutsideCore[i] = true;
+        }
+      }
+    }
+
+    inquryCount++;
+    distancesFile << distance << "\n";
+    auto duration = duration_cast<std::chrono::nanoseconds>(end_clock - start_clock);
+    totalRuntime += (long long int)(duration.count());
+    runtimesFile << (long long int)(duration.count()) << "\n";
+    queriesFile << countQueries(visited, bg.nVertices) << "\n";
+    queriesAccumulatedFile << countQueries(nodesTouched, vcount) << "\n";
+
     if (command == "L0-BiBFS")
     {
-      auto duration = duration_cast<std::chrono::microseconds>(L0.outside_core_end_clock - L0.outside_core_start_clock);
-      L2_to_L0_runtimes.push_back((double)(duration.count()));
+      auto duration = duration_cast<std::chrono::nanoseconds>(L0.outside_core_end_clock - L0.outside_core_start_clock);
+      totalTimeSpentOutsideCore += (long long int)(duration.count());
+
+      runtimeToReachCoreFile << (long long int)(duration.count()) << "\n";
+      distToReachCoreFile << L0.acc_distance << "\n";
+      queriesOutsideCoreFile << countVerticesOutsideCore << "\n";
+      queriesAccumulatedOutsideCoreFile << countQueries(nodesTouchedOutsideCore, vcount) << "\n";
+
       vector<VertexIdx> path = L0.recoverPath(v1, v2);
+      bool reachedCore = false;
       for (const auto &p : path)
+      {
         pathsFile << p << " ";
+        if (L0.acc_distance != distance)
+        {
+          if (!L0.L0[p])
+            if (!reachedCore)
+              leftPathsFile << p << " ";
+            else
+              rightPathsFile << p << " ";
+          else
+            reachedCore = true;
+        }
+      }
       pathsFile << "\n";
+      leftPathsFile << "\n";
+      rightPathsFile << "\n";
 
       L0.sampleL0Vertices(v1, v2);
-      coreQueriesRandomL0File << L0.randomL0V1 << " " << L0.randomL0V2 << std::endl;
-      coreQueriesRandomL0RandomL1File << L0.randomL0FromRandomL1V1 << " " << L0.randomL0FromRandomL1V2 << std::endl;
+      coreQueriesRandomL0File << L0.randomL0V1 << " " << L0.randomL0V2 << "\n";
+      coreQueriesRandomL0RandomL1File << L0.randomL0FromRandomL1V1 << " " << L0.randomL0FromRandomL1V2 << "\n";
+      coreQueriesHighestDegL0File << L0.highestDegL0V1 << " " << L0.highestDegL0V2 << "\n";
+
+      if (L0.acc_distance == distance)
+        coreQueriesAllPairsL0 << -1 << " " << -1 << "\n";
+      else
+      {
+        for (VertexIdx i = L0.Q_START; i < L0.level1Record[L0.LEVEL_START]; i++)
+        {
+          VertexIdx v1 = L0.queue1[i];
+          for (VertexIdx j = L0.Q_START; j < L0.level2Record[L0.LEVEL_START]; j++)
+          {
+            VertexIdx v2 = L0.queue2[j];
+            coreQueriesAllPairsL0 << v1 << " " << v2 << "\n";
+          }
+        }
+      }
+      coreQueriesAllPairsL0 << -2 << " " << -2 << "\n";
     }
     else
     {
@@ -236,73 +217,32 @@ int main(int argc, char *argv[])
         pathsFile << p << " ";
       pathsFile << "\n";
     }
-    distances.push_back((double)(distance));
-    auto duration = duration_cast<std::chrono::microseconds>(end_clock - start_clock);
-    runtimes.push_back((double)(duration.count()));
-
-    visited[v1] = false;
-    visited[v2] = false;
-
-    numQueries.push_back(countQueries(visited, bg.nVertices));
-
-    for (VertexIdx i = 0; i < vcount; i++)
-    {
-      if (visited[i])
-      {
-        nodesTouched[i] = true;
-        nodesTouchedWithoutSample[i] = true;
-      }
-    }
-    nodesTouched[v1] = true;
-    nodesTouched[v2] = true;
-
-    queriesAccumulatedWithoutSample.push_back(std::count(nodesTouchedWithoutSample, nodesTouchedWithoutSample + (int64_t)vcount, true));
-    queriesAccumulated.push_back(std::count(nodesTouched, nodesTouched + (int64_t)vcount, true));
   }
-  // printf("ending rounds\n");
-  for (const auto &e : distances)
-    distancesFile << e << "\n";
-  for (const auto &e : runtimes)
-    runtimesFile << e << "\n";
-  for (const auto &e : numQueries)
-    queriesFile << e << "\n";
-  for (const auto &e : queriesAccumulatedWithoutSample)
-    queriesAccumulatedWithoutSampleFile << e << "\n";
-  for (const auto &e : queriesAccumulated)
-    queriesAccumulatedFile << e << "\n";
   if (command == "L0-BiBFS")
   {
-    for (const auto &e : L2_to_L0_runtimes)
-      runtimeToReachCoreFile << e << "\n";
+    printf("Wormhole-E ran %d inqueries in %lld nanoseconds \n", inquryCount, totalRuntime);
+    printf("Outside the core, Wormhole-E ran %d inqueries in %lld nanoseconds \n", inquryCount, totalTimeSpentOutsideCore);
     runtimeToReachCoreFile.close();
-    for (const auto &e : L2_to_L0_dist)
-      distToReachCoreFile << e << "\n";
     distToReachCoreFile.close();
+    queriesOutsideCoreFile.close();
+    queriesAccumulatedOutsideCoreFile.close();
 
-    hopsInCoreFile.close();
-    // queriesListFile.close();
-    queriesAccumulatedFile.close();
-    queriesAccumulatedWithoutSampleFile.close();
+    leftPathsFile.close();
+    rightPathsFile.close();
+
+    coreQueriesAllPairsL0.close();
+    coreQueriesHighestDegL0File.close();
+    coreQueriesRandomL0File.close();
+    coreQueriesRandomL0RandomL1File.close();
   }
-  //   } else{
-
-  //     nodesTouchedFile.open(final_save_bin_path + "_nodesTouched.bin", std::ios::binary);
-  //     queryTouchedFile.open(final_save_bin_path + "_queryTouched.bin", std::ios::binary);
-  //     nodesTouchedFile.write((char*)nodesTouched, sizeof(bool) * (int64_t) vcount);
-  //     queryTouchedFile.write((char*)queryTouched, sizeof(uint8_t) * (int64_t) vcount);
-  //     nodesTouchedFile.close();
-  //     queryTouchedFile.close();
-  //   }
-  // nodesTouchedWithoutSamplesFile.open(final_save_bin_path + "_nodesTouchedWithoutSamples.bin", std::ios::binary);
-  // nodesTouchedFile.clear();
-  // nodesTouchedWithoutSamplesFile.clear();
-  // nodesTouchedFile.seekp(0);
-  // nodesTouchedWithoutSamplesFile.seekp(0);
-  // nodesTouchedWithoutSamplesFile.write((char*)nodesTouchedWithoutSample, sizeof(bool) * (int64_t) vcount);
+  else
+    printf("BiBFS ran %d inqueries in %lld nanoseconds \n", inquryCount, totalRuntime);
 
   distancesFile.close();
   pathsFile.close();
   runtimesFile.close();
   failedSampleFile.close();
+  queriesAccumulatedFile.close();
+
   return 0;
 }

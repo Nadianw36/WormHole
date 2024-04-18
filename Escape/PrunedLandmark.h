@@ -656,10 +656,10 @@ namespace Escape
       spt_v_size += sizeof(*(index_[v].spt_v));
       spt_d_size += sizeof(*(index_[v].spt_d));
     }
-    MyFile << "index_t size: " << index_size << std::endl;
-    MyFile << "spt_v size: " << spt_v_size << std::endl;
-    MyFile << "spt_d size: " << spt_d_size << std::endl;
-    MyFile << "num_v_: " << sizeof(num_v_) << std::endl;
+    MyFile << "index_t size: " << index_size << " bytes" << std::endl;
+    MyFile << "spt_v size: " << spt_v_size << " bytes" << std::endl;
+    MyFile << "spt_d size: " << spt_d_size << " bytes" << std::endl;
+    MyFile << "num_v_: " << sizeof(num_v_) << " bytes" << std::endl;
   }
 }
 

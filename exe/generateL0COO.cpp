@@ -33,8 +33,8 @@ int main(int argc, char *argv[])
     cout << cg.nVertices << endl;
 
     L0Graph L0 = L0Graph(cg, graph_L0_name);
+    
     L0.checkForBadL0();
-
     L0.writeCoreCOO(graph_L0_name);
 
     return 0;

@@ -14,27 +14,19 @@
 
 using namespace Escape;
 
-// generateInput [graph_name] [input_ind]
+// generateInput [graph_name]
 int main(int argc, char *argv[])
 {
   std::string graph_name = argv[1];
-  std::string graph_filename = graph_name + ".edges";
-  std::string graph_loc = GRAPH_FOLDER + graph_filename;
-  // Graph g;
-  // if (loadGraph(graph_loc.c_str(), g, 1, IOFormat::escape))
-  // exit(1);
-  // printf("Loaded graph\n");
-  // CGraph cg = makeCSR(g);
-  // cg.sortById();
-  // printf("Converted to CSR\n");
+  std::ofstream inputFile(INPUT_FOLDER + graph_name + "_input.txt");
+
   CGraph cg;
   cg.loadGraphFromFile(graph_name);
 
   int ROUNDS = 10000;
   int count = 0;
   VertexIdx nVertices = cg.nVertices;
-  // VertexIdx nVertices = 41652230;
-  std::ofstream inputFile(INPUT_FOLDER + graph_name + "_input.txt");
+
   while (count < ROUNDS)
   {
     auto v1 = rand() % (int64_t)nVertices;
@@ -50,6 +42,5 @@ int main(int argc, char *argv[])
     inputFile.flush();
   }
   inputFile.close();
-
   return 0;
 }

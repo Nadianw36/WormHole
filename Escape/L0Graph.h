@@ -51,10 +51,9 @@ namespace Escape
     bool *L0; // bitmap of boolean flags
     bool *L1; // bitmap of boolean flags
     VertexIdx nVerticesL0;
-    PrunedLandmarkLabeling<> pll;
     ofstream output;
     chrono::high_resolution_clock::time_point outside_core_start_clock, outside_core_end_clock;
-    VertexIdx randomL0V1, randomL0V2, randomL0FromRandomL1V1, randomL0FromRandomL1V2;
+    VertexIdx randomL0V1, randomL0V2, randomL0FromRandomL1V1, randomL0FromRandomL1V2, highestDegL0V1, highestDegL0V2;
 
     // shared variables
     int acc_distance, L0_distance;
@@ -65,19 +64,21 @@ namespace Escape
     L0Graph() {}
     /**
      * @brief Construct a new L0Graph object from binary files containing L0 and L1 boolean arrays.
-     * Files should be named and have path bin/{graphName}_L0.bin and bin/{graphName}_L1.bin
+     * Files should be named and have paths:
+     *      bin/{graph_name}/L0/{graphL0Name}_L0.bin
+     *      bin/{graph_name}/L0/{graphL0Name}_L1.bin
      *
      * @param g
-     * @param graphName
+     * @param graphL0Name should be formatted as {graph_name}_seed_{core_size}
      */
-    L0Graph(const BiBFSGraph &graph, string graphName) : BiBFSGraph(graph)
+    L0Graph(const BiBFSGraph &graph, string graphL0Name) : BiBFSGraph(graph)
     {
 
-      string graphNameStem = graphName;
+      string graphNameStem = graphL0Name;
       string delimiter = "_";
-      size_t d_pos = graphName.find(delimiter);
+      size_t d_pos = graphL0Name.find(delimiter);
       if (d_pos != string::npos)
-        graphNameStem = graphName.substr(0, d_pos);
+        graphNameStem = graphL0Name.substr(0, d_pos);
       auto vcount = nVertices;
       // printf("vcount: %ld \n", vcount);
       L0 = new bool[vcount];
@@ -85,8 +86,8 @@ namespace Escape
 
       string graph_L0_folder = BIN_FOLDER + graphNameStem + "/" + L0_FOLDER;
 
-      ifstream L0File(graph_L0_folder + graphName + "_L0.bin", ios::in | ios::binary);
-      ifstream L1File(graph_L0_folder + graphName + "_L1.bin", ios::in | ios::binary);
+      ifstream L0File(graph_L0_folder + graphL0Name + "_L0.bin", ios::in | ios::binary);
+      ifstream L1File(graph_L0_folder + graphL0Name + "_L1.bin", ios::in | ios::binary);
       L0File.read((char *)L0, sizeof(bool) * (int64_t)vcount);
       L1File.read((char *)L1, sizeof(bool) * (int64_t)vcount);
       L0File.close();
@@ -99,11 +100,11 @@ namespace Escape
       // printf("L1 size: %ld \n", nVerticesL1);
     }
     /**
-     * @brief Construct a new L0Graph object via algorithm with an L0 size of sizeL0
+     * @brief Construct a new L0Graph object via algorithm with an core size of sizeL0
      *
      * @param g
      * @param sizeL0 - number of vertices in L0
-     * @param optimal - if True, then use high degree vertice as seed vertice, else use random vertice
+     * @param optimal - if True, then use high degree vertice as seed vertice, else use random vertex
      */
     L0Graph(const CGraph &graph, VertexIdx sizeL0, bool optimal = false, bool usePriorityQueue = false) : BiBFSGraph(graph)
     {
@@ -124,7 +125,7 @@ namespace Escape
     }
     /**
      * @brief Assert that:
-     *            1) for every vertex in L0, all of its neighbors are in L1
+     *            1) for every vertex in L0, all of its neighbors are in L1 or L0
      *            2) for every vertex in L1, at least one neighbor is in L0
      */
     void checkForBadL0() const
@@ -249,7 +250,7 @@ namespace Escape
     }
 
     /**
-     * @brief Prints the number of connected components, the size of each component, and
+     * Prints the number of connected components, the size of each component, and
      * the size of the largest component. Also, on default, prunes everything but the largest component.
      *
      * @param prune - if True, then prune everything but the largest component; else don't
@@ -353,31 +354,6 @@ namespace Escape
     }
 
     /**
-     * @brief Set the L0 PLL object
-     * Constructs a Pruned Landmark Labelling Graph in L0 to speed up distance computing
-     */
-    void setL0_PLL()
-    {
-      vector<pair<int, int>> edgelist;
-      for (VertexIdx i = 0; i < nVertices; i++)
-      {
-        if (L0[i])
-        {
-          for (EdgeIdx j = offsets[i]; j < offsets[i + 1]; j++)
-          {
-            VertexIdx nbor = nbors[j];
-            if (L0[nbor])
-            {
-              pair<int, int> edge((int64_t)i, (int64_t)nbor);
-              edgelist.push_back(edge);
-            }
-          }
-        }
-      }
-      pll.ConstructIndex(edgelist);
-    }
-
-    /**
      * @brief Save L0 and L1 boolean arrays as binary files named bin/{graphName}_L0.bin and bin/{graphName}_L1.bin.
      *
      * @param graphName
@@ -399,7 +375,12 @@ namespace Escape
       L1File.close();
     }
     /**
-     * @brief Print L0 -> L0, L0 -> L1, L1 -> L0, and L1 -> L1 degrees, as well as the total degree file
+     * @brief Print
+     *    L0 -> L0
+     *    L0 -> L1
+     *    L1 -> L0
+     *    L1 -> L1
+     * degrees, as well as the total degree file
      * in results/ folder.
      *
      * @param graph_name
@@ -525,6 +506,7 @@ namespace Escape
         if (L2_distance > 0 || (p1_L2_pt < 0 || p2_L2_pt < 0))
         {
           earlyConnection = true;
+          acc_distance = L2_distance;
           return L2_distance; // found path or path not possible
         }
       }
@@ -541,6 +523,7 @@ namespace Escape
         return -1;
 
       pathDistance += p1_distance.distance + p2_distance.distance;
+      acc_distance = pathDistance;
 
       if (p2_distance.early_connection)
       {
@@ -548,14 +531,10 @@ namespace Escape
         return pathDistance;
       }
 
-      if (optimized)
-        pathDistance += distance_L0_to_L0_Optimized();
-      else
-      {
-        int L0dist = distance_L0_to_L0();
-        // printf("l0 dist %ld \n", L0dist);
-        pathDistance += L0dist;
-      }
+      int L0dist = distance_L0_to_L0();
+      // printf("l0 dist %ld \n", L0dist);
+      pathDistance += L0dist;
+
       return pathDistance;
     }
 
@@ -669,6 +648,7 @@ namespace Escape
         return {pathDistance, false};
       }
     }
+
     bool continueSearch()
     {
       return !collision && !Q1empty() && !Q2empty() &&
@@ -732,34 +712,6 @@ namespace Escape
       // checkBiBFSState();
 
       return bidirectionalBFS();
-    }
-
-    /**
-     * @brief Using PLL, xompute distance between set of p1 vertices and set of p2 vertices within L0
-     *
-     * @param p1s - set of source vertices in L0
-     * @param p2s - set of destination vertices in L0
-     * @return int - computer distance
-     */
-    int distance_L0_to_L0_Optimized()
-    {
-      int shortest = nVertices;
-      VertexIdx p1, p2;
-
-      for (VertexIdx i = queue1[queue1[Q_START_IDX]]; i < queue1[queue1[Q_END_IDX]]; i++)
-      {
-        p1 = queue1[i];
-        for (VertexIdx j = queue2[queue2[Q_START_IDX]]; j < queue2[queue2[Q_END_IDX]]; j++)
-        {
-          p2 = queue2[i];
-          if (p1 == p2)
-            return 0;
-          const int distance = pll.QueryDistance(p1, p2);
-          if (distance < shortest && distance != -1)
-            return shortest = distance;
-        }
-      }
-      return shortest;
     }
 
     /**
@@ -911,15 +863,32 @@ namespace Escape
     void sampleL0Vertices(VertexIdx v1, VertexIdx v2)
     {
       srand(time(NULL));
-
       randomL0FromRandomL1V1 = -1;
       randomL0FromRandomL1V2 = -1;
 
       randomL0V1 = -1;
       randomL0V2 = -1;
+      highestDegL0V1 = -1;
+      highestDegL0V2 = -1;
 
       if (earlyConnection)
         return;
+
+      for (VertexIdx i = Q_START; i < level1Record[LEVEL_START]; i++)
+      {
+        VertexIdx v = queue1[i];
+        EdgeIdx deg = degree(v);
+        if (deg > highestDegL0V1)
+          highestDegL0V1 = v;
+      }
+
+      for (VertexIdx i = Q_START; i < level2Record[LEVEL_START]; i++)
+      {
+        VertexIdx v = queue2[i];
+        EdgeIdx deg = degree(v);
+        if (deg > highestDegL0V2)
+          highestDegL0V2 = v;
+      }
 
       if (!L0[v1])
       {
@@ -1011,10 +980,11 @@ namespace Escape
         for (EdgeIdx j = offsets[i]; j < offsets[i + 1]; j++)
         {
           VertexIdx nbor = nbors[j];
-          if (L0[nbor])
+          if (L0[nbor] && nbor > i)
             nEdgesCore++;
         }
       }
+      return nEdgesCore;
     }
 
     void writeCoreCOO(std::string graphName)
@@ -1024,6 +994,7 @@ namespace Escape
       EdgeIdx nEdgesCore = getCoreEdgeCount();
 
       L0File << nVerticesL0 << "  " << nEdgesCore << std::endl;
+      printf("L0 nvertices %ld nedges %ld\n", nVerticesL0, nEdgesCore);
       for (VertexIdx i = 0; i < nVertices; i++)
       {
         if (!L0[i])

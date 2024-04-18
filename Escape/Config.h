@@ -24,16 +24,16 @@ namespace Escape
 
     extern string BIBFS_FOLDER;
     extern string MLL_FOLDER;
+    extern string PLL_FOLDER;
+    extern string MLL_INPUT_FOLDER;
     extern string QBS_FOLDER;
     extern string L0_FOLDER;
 
     extern string DEGREES_FOLDER;
 
-    extern string BIBFS_MANYL0S_FOLDER;
     extern string BIBFS_RANDOML0_FOLDER;
     extern string BIBFS_RANDOML0FROMRANDOML1_FOLDER;
-
-
+    extern string BIBFS_HIGHESTDEGL0_FOLDER;
 
     void checkSetupFor(string graph);
 

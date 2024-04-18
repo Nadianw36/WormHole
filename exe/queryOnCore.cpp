@@ -17,16 +17,18 @@ using namespace Escape;
 using namespace std::chrono;
 
 int countQueries(bool *visited, VertexIdx nVertices) { return std::count(visited, visited + (int64_t)nVertices, true); };
-string getInputName(string command, string graphName, string graphL0Name)
+string getInputName(string command, string graphName, string graphL0Name, string start, string finish)
 {
 
   string inputFolder = getSubfolderName("L0-BiBFS");
   string inputPath = RESULTS_FOLDER + graphName + "/" + inputFolder;
 
-  string inputFilenamePrefix = inputPath + "0_10000_" + graphL0Name + "_L0-BiBFS_";
+  string inputFilenamePrefix = inputPath + start + "_" + finish + "_" + graphL0Name + "_L0-BiBFS_";
 
   if (!command.compare("L0-BiBFS-RandomL0"))
     return inputFilenamePrefix + "core-queries_random-L0.txt";
+  else if (!command.compare("L0-BiBFS-HighestDegL0"))
+    return inputFilenamePrefix + "core-queries_highest-deg-L0.txt";
   else
     return inputFilenamePrefix + "core-queries_random-L0-random-L1.txt";
 }
@@ -58,8 +60,8 @@ int main(int argc, char *argv[])
   L0Graph L0 = L0Graph(cg, graph_L0_name);
   L0.checkForBadL0();
 
-  string types[2] = {"L0-BiBFS-RandomL0", "L0-BiBFS-RandomL0FromL1"};
-  for (int i = 0; i < 2; i++)
+  string types[3] = {"L0-BiBFS-RandomL0", "L0-BiBFS-RandomL0FromRandomL1", "L0-BiBFS-HighestDegL0"};
+  for (int i = 0; i < 3; i++)
   {
 
     std::string command = types[i];
@@ -77,56 +79,28 @@ int main(int argc, char *argv[])
 
     VertexIdx vcount = cg.nVertices;
 
-    std::vector<int> numQueries;
-    std::vector<int> distances;
-    std::vector<int> runtimes;
-
     std::ofstream distancesFile(results_path + "_distances.txt");
     std::ofstream pathsFile(results_path + "_paths.txt");
-    std::ofstream runtimesFile(results_path + "_runtimes.txt");
+    std::ofstream runtimesFile(results_path + "_runtimes_nano.txt");
     std::ofstream queriesFile(results_path + "_queries.txt");
 
-    std::ifstream inputFile;
-    inputFile.open(getInputName(command, graph_name, graph_L0_name));
-    std::cout << getInputName(command, graph_name, graph_L0_name) << std::endl;
+    std::string inputFilename = getInputName(command, graph_name, graph_L0_name, str_start, str_finish);
+    std::ifstream inputFile(inputFilename);
+    std::cout << "reading queries from " << inputFilename << std::endl;
 
     // printf("starting round\n");
     std::chrono::high_resolution_clock::time_point start_clock;
     std::chrono::high_resolution_clock::time_point end_clock;
+    VertexIdx v1, v2;
+    int totalRuntimeThroughCore = 0;
 
-    for (int round = 0; round < ROUNDS; round++)
+    while (inputFile >> v1 >> v2)
     {
-      VertexIdx v1;
-      VertexIdx v2;
-      inputFile >> v1 >> v2;
-
-      if (round < startFrom || v1 == v2)
-        continue;
-      // printf("query %ld %d %ld %d \n", v1, L0.L0[v1], v2, L0.L0[v2]);
-      if (round % 1000 == 0 && round > startFrom)
-      {
-        // printf("round %i\n", round);
-
-        for (const auto &e : distances)
-          distancesFile << e << "\n";
-        for (const auto &e : runtimes)
-          runtimesFile << e << "\n";
-        for (const auto &e : numQueries)
-          queriesFile << e << "\n";
-
-        distances.clear();
-        runtimes.clear();
-        numQueries.clear();
-      }
-
-      if (v1 == v2)
-        continue;
-
       if (v1 < 0 || v2 < 0)
       { // doesn't traverse through core
-        distances.push_back(-1),
-            runtimes.push_back(-1);
-        numQueries.push_back(-1);
+        distancesFile << -1 << "\n";
+        runtimesFile << -1 << "\n";
+        queriesFile << -1 << "\n";
         pathsFile << "\n";
         continue;
       }
@@ -143,25 +117,21 @@ int main(int argc, char *argv[])
         pathsFile << p << " ";
       pathsFile << "\n";
 
-      distances.push_back((double)(distance));
-      auto duration = duration_cast<std::chrono::microseconds>(end_clock - start_clock);
-      runtimes.push_back((double)(duration.count()));
+      distancesFile << distance << "\n";
+      auto duration = duration_cast<std::chrono::nanoseconds>(end_clock - start_clock);
+      runtimesFile << (long long int)(duration.count()) << "\n";
+      totalRuntimeThroughCore += (long long int)(duration.count());
 
       visited[v1] = false;
       visited[v2] = false;
 
-      numQueries.push_back(countQueries(visited, bg.nVertices));
+      queriesFile << countQueries(visited, bg.nVertices) << "\n";
     }
-    // printf("ending rounds\n");
-    for (const auto &e : distances)
-      distancesFile << e << "\n";
-    for (const auto &e : runtimes)
-      runtimesFile << e << "\n";
-    for (const auto &e : numQueries)
-      queriesFile << e << "\n";
+    printf("For queries sampled as %s, all queries on core ran in %lld nanoseconds\n", command.c_str(), totalRuntimeThroughCore);
     distancesFile.close();
     pathsFile.close();
     runtimesFile.close();
+    queriesFile.close();
   }
   return 0;
 }
