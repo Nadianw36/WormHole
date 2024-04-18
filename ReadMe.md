@@ -100,12 +100,10 @@ All our datasets are publicly available networks taken from repositories on the 
 <div align="center">
 
 | _Network_       | _Source_                                                     |
-| --------------- | ------------------------------------------------------------ |
-| caida           | [KONECT](http://konect.cc/networks/as-caida20071105/)        |
+| --------------- | ------------------------------------------------------------ |   |
 | epinions        | [SNAP](https://snap.stanford.edu/data/soc-Epinions1.html)    |
 | slashdot        | [SNAP](https://snap.stanford.edu/data/soc-Slashdot0811.html) |
-| dblp            | [SNAP](https://snap.stanford.edu/data/com-DBLP.html)         |
-| higgs-twitter   | [SNAP](https://snap.stanford.edu/data/higgs-twitter.html)    |
+| dblp            | [SNAP](https://snap.stanford.edu/data/com-DBLP.html)         |   |
 | skitter         | [SNAP](https://snap.stanford.edu/data/as-Skitter.html)       |
 | large-dblp      | [KONECT](http://konect.cc/networks/dblp_coauthor/)           |
 | soc-pokec       | [SNAP](https://snap.stanford.edu/data/soc-Pokec.html)        |
