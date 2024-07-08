@@ -1,6 +1,6 @@
 ESCAPE_HOME := ../
 
-TARGETS := sample generateInput generateL0seed createCGraph generateL0COO queryOnCore PLL
+TARGETS := sample generateInput generateL0seed createCGraph generateL0COO queryOnCore PLL generateSparsifiedCOO
 
 OBJECTS := $(TARGETS:%=%.o)
 

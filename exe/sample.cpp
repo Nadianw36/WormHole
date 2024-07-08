@@ -27,10 +27,10 @@ int main(int argc, char *argv[])
   std::string graph_name = argv[2];
   std::string graph_L0_name = argv[2];
 
-  std::string delimiter = "_";
-  std::size_t d_pos = graph_L0_name.find(delimiter);
-  if (d_pos != std::string::npos)
-    graph_name = graph_L0_name.substr(0, d_pos);
+  // std::string delimiter = "_";
+  // std::size_t d_pos = graph_L0_name.find(delimiter);
+  // if (d_pos != std::string::npos)
+  //   graph_name = graph_L0_name.substr(0, d_pos);
 
   checkSetupFor(graph_name);
 
@@ -104,7 +104,7 @@ int main(int argc, char *argv[])
   for (int round = 0; round < ROUNDS; round++)
   {
     inputFile >> v1 >> v2;
-    // printf("queryy %ld %ld %ld\n", round, v1, v2);
+    // ,
     if (round < startFrom || v1 == v2)
       continue;
 
@@ -130,6 +130,7 @@ int main(int argc, char *argv[])
 
     if (distance == -1)
     {
+      distancesFile << -1 << std::endl;
       failedSampleFile << (int64_t)v1 << " " << (int64_t)v2 << " " << round << "\n";
       continue;
     }

@@ -111,6 +111,52 @@ namespace Escape
             mergeVertex = -1;
             secondParent = -1;
         }
+        VertexIdx countVisitedVertices() const
+        {
+            return std::count(visited, visited + (int64_t)nVertices, true);
+        }
+
+        vector<VertexIdx> connectedComponents()
+        {
+            vector<VertexIdx> connectedComponentsArray;
+            VertexIdx vertexCount = 0;
+            for (VertexIdx v = 0; v < nVertices; v++)
+            {
+                if (!visited[v])
+                {
+                    resetQueue(queue1);
+                    queue1[queue1[Q_END_IDX]++] = v;
+                    level1Record[LEVEL_START] = queue1[Q_END_IDX];
+                    level1Record[LEVEL_IDX] = LEVEL_START;
+                    BFS();
+                    int accVisited = countVisitedVertices();
+                    connectedComponentsArray.push_back(accVisited - vertexCount);
+                    vertexCount = accVisited;
+                }
+            }
+            return connectedComponentsArray;
+        }
+
+        void BFS()
+        {
+            while (!Q1empty())
+            {
+                while (queue1[Q_START_IDX] < level1Record[level1Record[LEVEL_IDX]])
+                {
+                    VertexIdx v = queue1[queue1[Q_START_IDX]++];
+                    for (EdgeIdx j = offsets[v]; j < offsets[v + 1]; j++)
+                    {
+                        VertexIdx nbor = nbors[j];
+                        if (!visited[nbor])
+                        {
+                            queue1[queue1[Q_END_IDX]++] = nbor;
+                            visited[nbor] = true;
+                        }
+                    }
+                }
+                level1Record[++level1Record[LEVEL_IDX]] = queue1[Q_END_IDX];
+            }
+        }
 
         vector<VertexIdx> recoverPath(VertexIdx s, VertexIdx t) const
         {
@@ -160,6 +206,5 @@ namespace Escape
 
         int BidirectionalBFS(VertexIdx p1, VertexIdx p2);
     };
-
 }
 #endif

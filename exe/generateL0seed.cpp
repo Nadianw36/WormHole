@@ -37,11 +37,12 @@ int main(int argc, char *argv[])
 
     VertexIdx vcount = cg.nVertices;
 
-    int numL0s = 21;
+    int numL0s = 6;
+    float increment = 0.1;
     VertexIdx *L0_sizes = new VertexIdx[numL0s];
     for (int s = 0; s < numL0s; s++)
     {
-        float percent = (float)s * 0.005;
+        float percent = (float)s * increment;
         L0_sizes[s] = (VertexIdx)(percent * vcount);
         graph_file << "core size " << percent << "%: " << L0_sizes[s] << " vertices\n";
         cout << "core size " << percent << "%: " << L0_sizes[s] << " vertices\n";
@@ -54,7 +55,7 @@ int main(int argc, char *argv[])
         auto end = chrono::high_resolution_clock::now();
         auto duration = duration_cast<chrono::nanoseconds>(end - start);
         long long int duration_count = (double)duration.count();
-        float percent = L0_idx * 0.5;
+        float percent = L0_idx * (increment * 100);
         string num_text = "_" + to_string(percent);
         string L0_size_str = num_text.substr(0, num_text.find(".") + 2);
         L0.checkForBadL0();

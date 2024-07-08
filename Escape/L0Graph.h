@@ -987,6 +987,48 @@ namespace Escape
       return nEdgesCore;
     }
 
+    void writeSparsifiedC00(std::string graphName, float percent, bool prune)
+    {
+      srand(time(NULL));
+      string num_text = "_" + to_string(percent * 100);
+      string sparsfied_str = num_text.substr(0, num_text.find(".") + 2);
+      std::replace(sparsfied_str.begin(), sparsfied_str.end(), '.', '-');
+
+      string suffix = prune ? "-sparsified-pruned.edges" : "-sparsified.edges";
+
+      ofstream L0File(GRAPH_FOLDER + graphName + sparsfied_str + suffix, ios::out | ios::binary);
+      int nEdgesSparsified = 0;
+      for (VertexIdx i = 0; i < nVertices; i++)
+      {
+        for (EdgeIdx j = offsets[i]; j < offsets[i + 1]; j++)
+        {
+          VertexIdx nbor = nbors[j];
+          if (nbor > i)
+          {
+            bool leaveAlone = prune && (degree(i) < 10 || degree(nbor) < 10);
+            if (!L0[i] || !L0[nbor] || leaveAlone)
+            {
+              L0File << i << "  " << nbor << std::endl;
+              nEdgesSparsified++;
+            }
+            else
+            {
+              float r = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+              if (r > percent)
+              {
+                L0File << i << "  " << nbor << std::endl;
+                nEdgesSparsified++;
+              }
+            }
+          }
+        }
+      }
+      L0File.seekp(0, ios::beg);
+      L0File << nVertices << "  " << nEdgesSparsified - 3 << std::endl;
+      printf("nvertices %ld nedges %ld\n", nVertices, nEdgesSparsified - 3);
+      L0File.close();
+    }
+
     void writeCoreCOO(std::string graphName)
     {
       ofstream L0File(GRAPH_FOLDER + graphName + "_core-COO.txt", ios::out | ios::binary);

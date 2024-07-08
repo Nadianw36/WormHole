@@ -30,11 +30,12 @@ int main(int argc, char *argv[])
     std::cout << cg.nVertices << std::endl;
 
     VertexIdx vcount = cg.nVertices;
-    int num_sizes = 4;
+    int num_sizes = 6;
+    float increment = 0.1;
     VertexIdx *L0_sizes = new VertexIdx[num_sizes];
     for (int s = 0; s < num_sizes; s++)
     {
-        float percent = (float)s * 0.005;
+        float percent = (float)s * increment;
         L0_sizes[s] = (VertexIdx)(percent * vcount);
         // printf("L0 size: %ld %f\n", L0_sizes[s], percent);
     }
@@ -66,7 +67,6 @@ int main(int argc, char *argv[])
             p.pop();
             L0[vl0] = true;
             L1[vl0] = false;
-            // printf("    added to L0\n", vl0);
             for (EdgeIdx e = cg.offsets[vl0]; e < cg.offsets[vl0 + 1]; e++)
             {
                 VertexIdx nbor = cg.nbors[e];
@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
         auto end = std::chrono::high_resolution_clock::now();
         duration = duration_cast<std::chrono::microseconds>(end - start);
         duration_count += (double)duration.count();
-        float percent = L0_idx * 0.5;
+        float percent = L0_idx * increment * 100;
         std::string L0_size_str = "_" + std::to_string(percent);
         std::ofstream L0File(BIN_FOLDER + graph_name + L0_size_str + "_L0.bin", std::ios::out | std::ios::binary);
         std::ofstream L1File(BIN_FOLDER + graph_name + L0_size_str + "_L1.bin", std::ios::out | std::ios::binary);
