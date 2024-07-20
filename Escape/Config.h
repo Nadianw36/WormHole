@@ -38,6 +38,21 @@ namespace Escape
     void checkSetupFor(string graph);
 
     std::string getSubfolderName(std::string command);
+
+    inline char *getCmdOption(int argc, char **argv, const std::string &option)
+    {
+        char **itr = std::find(argv, argv + argc, option);
+        if (itr != (argv + argc) && ++itr != (argv + argc))
+        {
+            return *itr;
+        }
+        return nullptr;
+    }
+    
+    inline bool cmdOptionExists(int argc, char **argv, const std::string &option)
+    {
+        return std::find(argv, argv + argc, option) != (argv + argc);
+    }
 }
 
 #endif

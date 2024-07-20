@@ -30,8 +30,8 @@ int main(int argc, char *argv[])
     std::cout << cg.nVertices << std::endl;
 
     VertexIdx vcount = cg.nVertices;
-    int num_sizes = 6;
-    float increment = 0.1;
+    int num_sizes = 11;
+    float increment = 0.01;
     VertexIdx *L0_sizes = new VertexIdx[num_sizes];
     for (int s = 0; s < num_sizes; s++)
     {

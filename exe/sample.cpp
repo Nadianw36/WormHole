@@ -104,7 +104,7 @@ int main(int argc, char *argv[])
   for (int round = 0; round < ROUNDS; round++)
   {
     inputFile >> v1 >> v2;
-    // ,
+    // std::cout << v1 << " " << v2 << std::endl;
     if (round < startFrom || v1 == v2)
       continue;
 

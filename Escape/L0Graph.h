@@ -987,16 +987,75 @@ namespace Escape
       return nEdgesCore;
     }
 
-    void writeSparsifiedC00(std::string graphName, float percent, bool prune)
+    // void writeSparsifiedC00(std::string graphName, float percent, bool prune)
+    // {
+    //   srand(time(NULL));
+    //   string num_text = "_" + to_string(percent * 100);
+    //   string sparsfied_str = num_text.substr(0, num_text.find(".") + 2);
+    //   std::replace(sparsfied_str.begin(), sparsfied_str.end(), '.', '-');
+
+    //   string suffix = prune ? "-sparsified-pruned.edges" : "-sparsified.edges";
+
+    //   ofstream L0File(GRAPH_FOLDER + graphName + sparsfied_str + suffix, ios::out | ios::binary);
+    //   int nEdgesSparsified = 0;
+    //   for (VertexIdx i = 0; i < nVertices; i++)
+    //   {
+    //     for (EdgeIdx j = offsets[i]; j < offsets[i + 1]; j++)
+    //     {
+    //       VertexIdx nbor = nbors[j];
+    //       if (nbor > i)
+    //       {
+    //         bool leaveAlone = prune && (degree(i) < 10 || degree(nbor) < 10);
+    //         if (!L0[i] || !L0[nbor] || leaveAlone)
+    //         {
+    //           L0File << i << "  " << nbor << std::endl;
+    //           nEdgesSparsified++;
+    //         }
+    //         else
+    //         {
+    //           float r = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+    //           if (r > percent)
+    //           {
+    //             L0File << i << "  " << nbor << std::endl;
+    //             nEdgesSparsified++;
+    //           }
+    //         }
+    //       }
+    //     }
+    //   }
+    //   L0File.seekp(0, ios::beg);
+    //   L0File << nVertices << "  " << nEdgesSparsified - 3 << std::endl;
+    //   printf("nvertices %ld nedges %ld\n", nVertices, nEdgesSparsified - 3);
+    //   L0File.close();
+    // }
+    int *highestDegreeL1NborInL0()
     {
-      srand(time(NULL));
-      string num_text = "_" + to_string(percent * 100);
-      string sparsfied_str = num_text.substr(0, num_text.find(".") + 2);
-      std::replace(sparsfied_str.begin(), sparsfied_str.end(), '.', '-');
+      int *highestDegNbor = new int[nVertices];
+      fill(highestDegNbor, highestDegNbor + nVertices, -1);
+      for (VertexIdx i = 0; i < nVertices; i++)
+      {
+        if (!L1[i])
+          continue;
+        int maxDeg = -1;
+        int maxDegNbor = -1;
+        for (EdgeIdx j = offsets[i]; j < offsets[i + 1]; j++)
+        {
+          VertexIdx nbor = nbors[j];
+          if (L0[nbor] && degree(nbor) > maxDeg)
+          {
+            maxDeg = degree(nbor);
+            maxDegNbor = nbor;
+          }
+        }
+        highestDegNbor[i] = maxDegNbor;
+      }
+      return highestDegNbor;
+    }
+    void writeSparsifiedC00(std::string graphName)
+    {
 
-      string suffix = prune ? "-sparsified-pruned.edges" : "-sparsified.edges";
-
-      ofstream L0File(GRAPH_FOLDER + graphName + sparsfied_str + suffix, ios::out | ios::binary);
+      ofstream L0File(GRAPH_FOLDER + graphName + "_sparsified.edges", ios::out | ios::binary);
+      int *highestL1Nbor = highestDegreeL1NborInL0();
       int nEdgesSparsified = 0;
       for (VertexIdx i = 0; i < nVertices; i++)
       {
@@ -1005,27 +1064,40 @@ namespace Escape
           VertexIdx nbor = nbors[j];
           if (nbor > i)
           {
-            bool leaveAlone = prune && (degree(i) < 10 || degree(nbor) < 10);
-            if (!L0[i] || !L0[nbor] || leaveAlone)
-            {
-              L0File << i << "  " << nbor << std::endl;
+            if (L1[i] && L1[nbor])
+              continue;
+            else if (L1[i] && L0[nbor] && nbor != highestL1Nbor[i])
+              continue;
+            else if (L1[nbor] && L0[i] && i != highestL1Nbor[nbor])
+              continue;
+            else
               nEdgesSparsified++;
-            }
+          }
+        }
+      }
+      L0File << (int64_t)nVertices << "  " << (int64_t)(nEdgesSparsified) << std::endl;
+      printf("nvertices %ld nedges %ld\n", nVertices, nEdgesSparsified);
+      for (VertexIdx i = 0; i < nVertices; i++)
+      {
+        for (EdgeIdx j = offsets[i]; j < offsets[i + 1]; j++)
+        {
+          VertexIdx nbor = nbors[j];
+          if (nbor > i)
+          {
+            if (L1[i] && L1[nbor])
+              continue;
+            else if (L1[i] && L0[nbor] && nbor != highestL1Nbor[i])
+              continue;
+            else if (L1[nbor] && L0[i] && i != highestL1Nbor[nbor])
+              continue;
             else
             {
-              float r = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
-              if (r > percent)
-              {
-                L0File << i << "  " << nbor << std::endl;
-                nEdgesSparsified++;
-              }
+              nEdgesSparsified++;
+              L0File << (int64_t)i << "  " << (int64_t)nbor << std::endl;
             }
           }
         }
       }
-      L0File.seekp(0, ios::beg);
-      L0File << nVertices << "  " << nEdgesSparsified - 3 << std::endl;
-      printf("nvertices %ld nedges %ld\n", nVertices, nEdgesSparsified - 3);
       L0File.close();
     }
 

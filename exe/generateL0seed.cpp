@@ -37,8 +37,8 @@ int main(int argc, char *argv[])
 
     VertexIdx vcount = cg.nVertices;
 
-    int numL0s = 6;
-    float increment = 0.1;
+    int numL0s = 11;
+    float increment = 0.01;
     VertexIdx *L0_sizes = new VertexIdx[numL0s];
     for (int s = 0; s < numL0s; s++)
     {
