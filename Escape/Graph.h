@@ -131,9 +131,11 @@ namespace Escape
 
     EdgeIdx degree(VertexIdx v) const { return offsets[v + 1] - offsets[v]; }
 
-    void saveGraphToFile(std::string graph_name) const;
+    void saveGraphToFile(std::string subfolder, std::string graphName) const;
 
     void loadGraphFromFile(std::string graph_name);
+
+    void loadGraphFromFile(std::string subfolder, std::string graph_name);
 
     void createSanitizedFile(std::string filename);
 

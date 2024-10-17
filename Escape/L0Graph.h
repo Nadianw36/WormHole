@@ -1104,6 +1104,7 @@ namespace Escape
     void writeCoreCOO(std::string graphName)
     {
       ofstream L0File(GRAPH_FOLDER + graphName + "_core-COO.txt", ios::out | ios::binary);
+      ofstream LnFile(GRAPH_FOLDER + graphName + "_outside-core-COO.txt", ios::out | ios::binary);
 
       EdgeIdx nEdgesCore = getCoreEdgeCount();
 
@@ -1121,6 +1122,19 @@ namespace Escape
         }
       }
       L0File.close();
+
+      LnFile << nVertices << "  " << nEdges - nEdgesCore << std::endl;
+      printf("L0 nvertices %ld nedges %ld\n", nVertices, nEdges - nEdgesCore);
+      for (VertexIdx i = 0; i < nVertices; i++)
+      {
+        for (EdgeIdx j = offsets[i]; j < offsets[i + 1]; j++)
+        {
+          VertexIdx nbor = nbors[j];
+          if ((!L0[i] || !L0[nbor]) && nbor > i)
+            LnFile << i << "  " << nbor << std::endl;
+        }
+      }
+      LnFile.close();
     }
   };
 

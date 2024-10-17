@@ -14,18 +14,19 @@
 
 using namespace Escape;
 
-// generateInput [graph_name]
+// generateInput [graph_name] 
 int main(int argc, char *argv[])
 {
   std::string graph_name = argv[1];
-  std::ofstream inputFile(INPUT_FOLDER + graph_name + "_input.txt");
+  std::int64_t nVertices = stoi(argv[2]);
+  std::ofstream inputFile(INPUT_FOLDER + "spanners-inputs/" + graph_name + "_input.txt");
 
-  CGraph cg;
-  cg.loadGraphFromFile(graph_name);
+  // CGraph cg;
+  // cg.loadGraphFromFile(graph_name);
 
-  int ROUNDS = 10000;
+  int ROUNDS = 20000;
   int count = 0;
-  VertexIdx nVertices = cg.nVertices;
+  // VertexIdx nVertices = cg.nVertices;
 
   while (count < ROUNDS)
   {

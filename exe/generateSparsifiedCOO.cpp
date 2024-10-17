@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
     if (d_pos != std::string::npos)
         graph_name = graph_L0_name.substr(0, d_pos);
 
-    checkSetupFor(graph_name);
+    checkL0SetupFor(graph_name);
 
     CGraph cg;
     cg.loadGraphFromFile(graph_name);

@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
   std::string delimiter = "_";
   std::size_t d_pos = graph_L0_name.find(delimiter);
 
-  checkSetupFor(graph_name);
+  checkL0SetupFor(graph_name);
 
   std::string str_start = argv[2];
   std::string str_finish = argv[3];

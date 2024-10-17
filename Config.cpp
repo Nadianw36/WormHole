@@ -38,7 +38,7 @@ string Escape::BIBFS_HIGHESTDEGL0_FOLDER = "highestDegL0/";
  *
  */
 
-void Escape::checkSetupFor(string graph_name)
+void Escape::checkL0SetupFor(string graph_name)
 {
     create_directory(INPUT_FOLDER);
     create_directory(INPUT_FOLDER + MLL_INPUT_FOLDER);

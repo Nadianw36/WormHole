@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
     if (d_pos != std::string::npos)
         graph_name = graph_L0_name.substr(0, d_pos);
 
-    checkSetupFor(graph_name);
+    checkL0SetupFor(graph_name);
 
     CGraph cg;
     cg.loadGraphFromFile(graph_name);
@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
     cout << cg.nVertices << endl;
 
     L0Graph L0 = L0Graph(cg, graph_L0_name);
-    
+
     L0.checkForBadL0();
     L0.writeCoreCOO(graph_L0_name);
 

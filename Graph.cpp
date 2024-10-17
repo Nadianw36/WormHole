@@ -297,11 +297,12 @@ CGraph Escape::makeCSC(Graph g, bool inPlace)
 {
     return makeCSR({g.nVertices, g.nEdges, g.dsts, g.srcs}, inPlace);
 }
-void CGraph::saveGraphToFile(std::string graph_name) const
+void CGraph::saveGraphToFile(std::string subfolder, std::string graphName) const
 {
-    std::string bin_graph_folder = BIN_FOLDER + graph_name + "/";
 
-    std::ofstream outFile(bin_graph_folder + graph_name + "_CGraph.bin", std::ios::binary);
+    create_directories(BIN_FOLDER + subfolder);
+
+    std::ofstream outFile(BIN_FOLDER + subfolder + "/" + graphName + "_CGraph.bin", std::ios::binary);
 
     // Write the number of vertices and edges
     outFile.write(reinterpret_cast<const char *>(&nVertices), sizeof(VertexIdx));
@@ -320,6 +321,27 @@ void CGraph::loadGraphFromFile(std::string graph_name)
     std::string bin_graph_folder = BIN_FOLDER + graph_name + "/";
 
     std::ifstream inFile(bin_graph_folder + graph_name + "_CGraph.bin", std::ios::binary);
+
+    // Read the number of vertices and edges
+    inFile.read(reinterpret_cast<char *>(&nVertices), sizeof(VertexIdx));
+    inFile.read(reinterpret_cast<char *>(&nEdges), sizeof(EdgeIdx));
+
+    // Allocate memory for offsets array and read the data
+    offsets = new EdgeIdx[nVertices + 1];
+    inFile.read(reinterpret_cast<char *>(offsets), sizeof(EdgeIdx) * (nVertices + 1));
+
+    // Allocate memory for neighbors array and read the data
+    nbors = new VertexIdx[offsets[nVertices]];
+    inFile.read(reinterpret_cast<char *>(nbors), sizeof(VertexIdx) * offsets[nVertices]);
+
+    inFile.close();
+}
+void CGraph::loadGraphFromFile(std::string subfolder, std::string graph_name)
+{
+    std::string bin_graph_folder = BIN_FOLDER + subfolder + "/";
+
+    std::ifstream inFile(bin_graph_folder + graph_name + "_CGraph.bin", std::ios::binary);
+    std::cout << bin_graph_folder + graph_name + "_CGraph.bin" << endl;
 
     // Read the number of vertices and edges
     inFile.read(reinterpret_cast<char *>(&nVertices), sizeof(VertexIdx));

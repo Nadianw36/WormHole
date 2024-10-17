@@ -1,5 +1,5 @@
-import numpy as np
 import sys
+import numpy as np
 
 if __name__ == "__main__":
     args = sys.argv[1:]

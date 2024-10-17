@@ -35,11 +35,11 @@ namespace Escape
     extern string BIBFS_RANDOML0FROMRANDOML1_FOLDER;
     extern string BIBFS_HIGHESTDEGL0_FOLDER;
 
-    void checkSetupFor(string graph);
+    void checkL0SetupFor(string graph);
 
     std::string getSubfolderName(std::string command);
 
-    inline char *getCmdOption(int argc, char **argv, const std::string &option)
+    inline char *getOptionalCmdOption(int argc, char **argv, const std::string &option)
     {
         char **itr = std::find(argv, argv + argc, option);
         if (itr != (argv + argc) && ++itr != (argv + argc))
@@ -48,7 +48,29 @@ namespace Escape
         }
         return nullptr;
     }
-    
+
+    inline char *getCmdOption(int argc, char **argv, const std::string &option, const std::string error_message)
+    {
+        char **itr = std::find(argv, argv + argc, option);
+        if (itr != (argv + argc) && ++itr != (argv + argc))
+        {
+            return *itr;
+        }
+        throw std::invalid_argument(error_message);
+        return nullptr;
+    }
+
+    inline bool foundHelpFlag(int argc, char **argv, const char *description)
+    {
+        const std::string help = "-h";
+        bool foundHelp = std::find(argv, argv + argc, help) != (argv + argc);
+        if (foundHelp)
+        {
+            std::cout << description << std::endl;
+        }
+        return foundHelp;
+    }
+
     inline bool cmdOptionExists(int argc, char **argv, const std::string &option)
     {
         return std::find(argv, argv + argc, option) != (argv + argc);

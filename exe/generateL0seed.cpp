@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
     string graph_results_folder = RESULTS_FOLDER + graph_name + "/" + L0_FOLDER;
     ofstream graph_file(graph_results_folder + graph_name + type + ".txt");
 
-    checkSetupFor(graph_name);
+    checkL0SetupFor(graph_name);
     std::cout << std::setprecision(3);
 
     CGraph cg;

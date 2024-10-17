@@ -20,7 +20,7 @@ using namespace std::chrono;
 int main(int argc, char *argv[])
 {
   std::string graph_name = argv[1];
-  checkSetupFor(graph_name);
+  checkL0SetupFor(graph_name);
 
   std::string results_graph_sub_folder = RESULTS_FOLDER + graph_name + "/" + getSubfolderName("PLL");
   std::cout << results_graph_sub_folder << std::endl;
