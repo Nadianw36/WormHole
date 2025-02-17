@@ -19,13 +19,6 @@ using namespace chrono;
 int main(int argc, char *argv[])
 {
     std::string graph_name = argv[1];
-    std::string graph_L0_name = argv[1];
-    bool prune = true;
-
-    std::string delimiter = "_";
-    std::size_t d_pos = graph_L0_name.find(delimiter);
-    if (d_pos != std::string::npos)
-        graph_name = graph_L0_name.substr(0, d_pos);
 
     checkL0SetupFor(graph_name);
 
@@ -34,9 +27,17 @@ int main(int argc, char *argv[])
     cout << cg.nEdges << endl;
     cout << cg.nVertices << endl;
 
-    L0Graph L0 = L0Graph(cg, graph_L0_name);
-    L0.checkForBadL0();
-    L0.writeSparsifiedC00(graph_L0_name);
+    const char* colour[20]
+        = { "0-5", "1-0", "1-5", "2-0","2-5", "3-0", "3-5","4-0", "4-5","5-0", "5-5","6-0", "6-5","7-0", "7-5",
+        "8-0", "8-5", "9-0", "9-5", "10-0"};
+    for (int i = 0; i < 20; i++)
+    {
+        std::string graph_L0_name = graph_name + "_seed_" + colour[i];
+        L0Graph L0 = L0Graph(cg, graph_L0_name);
+        L0.checkForBadL0();
+        L0.writeSparsifiedC00(graph_L0_name);
+    } 
+    
 
     // L0.checkForBadL0();
     // float sparsified[] = {0.3, 0.4, 0.5, 0.6, 0.7};
