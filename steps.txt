@@ -1,0 +1,12 @@
+
+
+1. exe/createCGraph 
+    (creates Cgraph representation)
+2. exe/generateL0seed 
+    (creates the core mapping)
+3. exe/generateL0COO
+    (generates edgelists for L0->L0 + L0-> L1 and separately all other edges)
+4. python python/sanitize.py {relative_location + graph_name}_outside-core-COO.txt
+5. python python/remap_graph.py {spanner output}
+6. python python/concat_graph_files.py {output from step 5} {relative_location + graph_name}_inter-core-COO.tx.txt
+7. run distance computations (ie exe/sample)

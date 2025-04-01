@@ -17,16 +17,26 @@ using namespace std;
 using namespace chrono;
 int main(int argc, char *argv[])
 {
-    string graph_name = argv[1];
-    string init_type = argv[2];
+    const char *exeDescription =
+      "Arguments: \n"
+      "-g   Graph name. The input CSR Graph should be named {graph_name}_CGraph.bin \n"
+      "-gi  Graph input relative location. The edgelist should be found in the folder "
+      "/bin/{input_loc}/{graph_name}_CGraph.bin. L0 bin\n"
+      "-go  Core output relative location. The core boolean lists will be found in "
+      "/bin/{graph_output_loc}/L0 .\n"
+      "-o   Output relative location. The files contianing core statistics will be"
+      "found in /results/{output_loc}/L0."
+      "Any non existing subfolders will be created.\n";
 
-    string delimiter = "_";
-    size_t d_pos = init_type.find(delimiter);
-    bool high_degree_seed = d_pos != string::npos;
+    if (foundHelpFlag(argc, argv, exeDescription))
+        return 0;
+    std::string graph_name = getCmdOption(argc, argv, "-g", "need to provide graph name after flag -g");
+    std::string output_loc = getCmdOption(argc, argv, "-o", "need to provide output subfolder after flag -o");
+    std::string graph_input_loc = getCmdOption(argc, argv, "-gi", "need to provide graph input subfolder after flag -gi");
+    std::string graph_output_loc = getCmdOption(argc, argv, "-go", "need to provide graph output subfolder after flag -go");
 
-    string type = "_" + init_type;
-    string graph_results_folder = RESULTS_FOLDER + graph_name + "/" + L0_FOLDER;
-    ofstream graph_file(graph_results_folder + graph_name + type + ".txt");
+    string graph_results_folder = RESULTS_FOLDER + graph_output_loc + "/";
+    ofstream graph_file(graph_results_folder + graph_name  + "_core-init-times.txt");
 
     checkL0SetupFor(graph_name);
     std::cout << std::setprecision(3);
@@ -51,7 +61,7 @@ int main(int argc, char *argv[])
     for (int L0_idx = 1; L0_idx < numL0s; L0_idx++)
     {
         auto start = chrono::high_resolution_clock::now();
-        L0Graph L0 = L0Graph(cg, L0_sizes[L0_idx], high_degree_seed);
+        L0Graph L0 = L0Graph(cg, L0_sizes[L0_idx], false);
         auto end = chrono::high_resolution_clock::now();
         auto duration = duration_cast<chrono::nanoseconds>(end - start);
         long long int duration_count = (double)duration.count();
@@ -59,8 +69,8 @@ int main(int argc, char *argv[])
         string num_text = "_" + to_string(percent);
         string L0_size_str = num_text.substr(0, num_text.find(".") + 2);
         L0.checkForBadL0();
-        L0.writeGraphToFile(graph_name + type + L0_size_str);
-        L0.print_size(graph_file, graph_name + type + L0_size_str);
+        L0.writeGraphToFile(graph_output_loc  + "/" + graph_name + L0_size_str);
+        L0.print_size(graph_file, graph_name + L0_size_str);
         graph_file << "initialization time for " << percent << "%: " << duration_count << " nanoseconds\n";
         std::cout << "initialization time for " << percent << "%: " << duration_count << " nanoseconds\n";
     }

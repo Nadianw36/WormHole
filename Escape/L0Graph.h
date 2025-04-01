@@ -365,7 +365,7 @@ namespace Escape
       std::string delimiter = "_";
       std::size_t d_pos = graphName.find(delimiter);
       std::string graphFolder = graphName.substr(0, d_pos) + "/";
-
+      std:cout << graphFolder << std::endl;
       string graph_L0_folder = BIN_FOLDER + graphFolder + L0_FOLDER;
       ofstream L0File(graph_L0_folder + graphName + "_L0.bin", ios::out | ios::binary);
       ofstream L1File(graph_L0_folder + graphName + "_L1.bin", ios::out | ios::binary);
@@ -986,6 +986,22 @@ namespace Escape
       }
       return nEdgesCore;
     }
+    EdgeIdx getInterCoreEdgeCount()
+    {
+      EdgeIdx nEdgesInterCore = 0;
+      for (VertexIdx i = 0; i < nVertices; i++)
+      {
+        if (!L0[i])
+          continue;
+        for (EdgeIdx j = offsets[i]; j < offsets[i + 1]; j++)
+        {
+          VertexIdx nbor = nbors[j];
+          if (!L0[nbor])
+            nEdgesInterCore++;
+        }
+      }
+      return nEdgesInterCore;
+    }
 
     // void writeSparsifiedC00(std::string graphName, float percent, bool prune)
     // {
@@ -1103,34 +1119,39 @@ namespace Escape
 
     void writeCoreCOO(std::string graphName)
     {
-      ofstream L0File(GRAPH_FOLDER + graphName + "_core-COO.txt", ios::out | ios::binary);
+      ofstream L0File(GRAPH_FOLDER + graphName + "_inter-core-COO.txt", ios::out | ios::binary);
       ofstream LnFile(GRAPH_FOLDER + graphName + "_outside-core-COO.txt", ios::out | ios::binary);
 
       EdgeIdx nEdgesCore = getCoreEdgeCount();
 
-      L0File << nVerticesL0 << "  " << nEdgesCore << std::endl;
-      printf("L0 nvertices %ld nedges %ld\n", nVerticesL0, nEdgesCore);
+      EdgeIdx nEdgesL0ToL1 = getInterCoreEdgeCount();
+
+      L0File << nVerticesL0 << "  " << nEdgesCore + nEdgesL0ToL1 << std::endl;
+      printf("L0 nvertices %ld nedges %ld\n", nVerticesL0, nEdgesCore + nEdgesL0ToL1);
       for (VertexIdx i = 0; i < nVertices; i++)
       {
-        if (!L0[i])
+        if (!(L0[i] || L1[i]))
           continue;
         for (EdgeIdx j = offsets[i]; j < offsets[i + 1]; j++)
         {
           VertexIdx nbor = nbors[j];
-          if (L0[nbor] && nbor > i)
+          if ((L0[i] || L0[nbor]) && nbor > i)
             L0File << i << "  " << nbor << std::endl;
-        }
+
+        } 
       }
       L0File.close();
 
-      LnFile << nVertices << "  " << nEdges - nEdgesCore << std::endl;
-      printf("L0 nvertices %ld nedges %ld\n", nVertices, nEdges - nEdgesCore);
+      LnFile << nVertices << "  " << nEdges - nEdgesCore - nEdgesL0ToL1<< std::endl;
+      printf("L0 nvertices %ld nedges %ld\n", nVertices, nEdges - nEdgesCore - nEdgesL0ToL1);
       for (VertexIdx i = 0; i < nVertices; i++)
       {
+        if(L0[i])
+          continue;
         for (EdgeIdx j = offsets[i]; j < offsets[i + 1]; j++)
         {
           VertexIdx nbor = nbors[j];
-          if ((!L0[i] || !L0[nbor]) && nbor > i)
+          if ((!L0[i] && !L0[nbor]) && nbor > i)
             LnFile << i << "  " << nbor << std::endl;
         }
       }

@@ -6,7 +6,7 @@ if __name__ == "__main__":
     graphname = args[0]
     GRAPHFILE = "graphs/" + graphname + ".txt"
     MAPPING = "graphs/" + graphname + "_mapping.txt"
-    C00FILE = "graphs/" + graphname + "_sanitized.edges"
+    C00FILE = "graphs/" + graphname + "_sanitized.txt"
     edgelist = np.loadtxt(GRAPHFILE)
     print(edgelist.shape)
     inverse = np.zeros(int(edgelist[0, 0]))
